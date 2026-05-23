@@ -14,24 +14,36 @@
 TTS API schemas
 """
 
-from typing import Optional
+from typing import Optional, Literal
 from pydantic import BaseModel, Field
 
 
 class TTSSynthesizeRequest(BaseModel):
     """TTS synthesis request"""
     text: str = Field(..., description="Text to synthesize")
+    inference_mode: Optional[Literal["local", "comfyui"]] = Field(
+        None,
+        description="TTS inference mode: 'local' (Edge TTS) or 'comfyui'. Defaults to service config."
+    )
+    voice: Optional[str] = Field(
+        None,
+        description="Edge TTS voice id (local mode), e.g. 'zh-CN-YunjianNeural'."
+    )
+    speed: Optional[float] = Field(
+        None, ge=0.5, le=2.0,
+        description="Speech speed multiplier (1.0 = normal). Defaults to 1.2."
+    )
     workflow: Optional[str] = Field(
-        None, 
-        description="TTS workflow key (e.g., 'runninghub/tts_edge.json' or 'selfhost/tts_edge.json'). If not specified, uses default workflow from config."
+        None,
+        description="TTS workflow key (ComfyUI mode), e.g. 'runninghub/tts_edge.json'."
     )
     ref_audio: Optional[str] = Field(
-        None, 
-        description="Reference audio path for voice cloning (optional). Can be a local file path or URL."
+        None,
+        description="Reference audio for voice cloning (ComfyUI mode). Local path or URL."
     )
     voice_id: Optional[str] = Field(
-        None, 
-        description="Voice ID (deprecated, use workflow instead)"
+        None,
+        description="Voice ID (deprecated, use voice + inference_mode='local' instead)"
     )
     
     class Config:

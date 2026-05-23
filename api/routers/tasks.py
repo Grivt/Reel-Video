@@ -75,6 +75,28 @@ async def get_task(task_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.delete("/{task_id}/permanent")
+async def delete_task_permanently(task_id: str):
+    """
+    Permanently delete a task **and** its on-disk artefacts.
+
+    Removes the task record from history and recursively deletes the task's
+    output directory (frames, audio, final.mp4). Intended for the desktop UI's
+    "delete" button — callers should confirm with the user first since this
+    operation is destructive and irreversible.
+    """
+    try:
+        success = task_manager.delete_task(task_id, purge_files=True)
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+        return {"success": True, "message": f"Task {task_id} deleted"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Delete task error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.delete("/{task_id}")
 async def cancel_task(task_id: str):
     """

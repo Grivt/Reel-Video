@@ -17,8 +17,36 @@ Supports both synchronous and asynchronous video generation.
 """
 
 import os
+from pathlib import Path
+
 from fastapi import APIRouter, HTTPException, Request
 from loguru import logger
+
+
+# Pipeline emits English event_type / action strings — translate to Chinese
+# for direct display in the desktop progress bar message.
+_EVENT_TYPE_ZH = {
+    "initializing": "初始化",
+    "processing_content": "处理文案",
+    "splitting_script": "切分文案",
+    "generating_script": "生成文案",
+    "generating_title": "生成标题",
+    "generating_narrations": "生成解说词",
+    "generating_image_prompts": "生成图像提示词",
+    "analyzing_asset": "分析素材",
+    "analyzing_assets": "分析素材",
+    "processing_frame": "处理分镜",
+    "frame_step": "分镜处理",
+    "concatenating": "合成视频",
+    "completed": "完成",
+}
+
+_ACTION_ZH = {
+    "audio": "语音",
+    "image": "图像",
+    "video": "视频",
+    "compose": "合成",
+}
 
 from api.dependencies import PixelleVideoDep
 from api.schemas.video import (
@@ -138,23 +166,31 @@ async def generate_video_sync(
             "bgm_volume": request_body.bgm_volume,
         }
         
-        # Add TTS workflow if specified
+        # Pass through TTS mode/voice/speed (pipeline already supports `local` / `comfyui`).
+        if request_body.tts_inference_mode:
+            video_params["tts_inference_mode"] = request_body.tts_inference_mode
+        if request_body.tts_voice:
+            video_params["tts_voice"] = request_body.tts_voice
+        if request_body.tts_speed is not None:
+            video_params["tts_speed"] = request_body.tts_speed
+
+        # Add TTS workflow if specified (only meaningful when mode='comfyui')
         if request_body.tts_workflow:
             video_params["tts_workflow"] = request_body.tts_workflow
-        
+
         # Add ref_audio if specified
         if request_body.ref_audio:
             video_params["ref_audio"] = request_body.ref_audio
-        
+
         # Legacy voice_id support (deprecated)
         if request_body.voice_id:
             logger.warning("voice_id parameter is deprecated, please use tts_workflow instead")
             video_params["voice_id"] = request_body.voice_id
-        
+
         # Add custom template parameters if specified
         if request_body.template_params:
             video_params["template_params"] = request_body.template_params
-        
+
         # Call video generator service
         result = await pixelle_video.generate_video(**video_params)
         
@@ -221,6 +257,26 @@ async def generate_video_async(
             media_width, media_height = generator.get_media_size()
             logger.debug(f"Auto-determined media size from template: {media_width}x{media_height}")
             
+            # Bridge pipeline ProgressEvent (0.0-1.0) → task_manager.update_progress
+            # so the desktop UI can poll /api/tasks/{id} and see live progress.
+            captured_task_id = task.task_id
+
+            def _on_progress(event):
+                pct = max(0, min(100, int(event.progress * 100)))
+                label = _EVENT_TYPE_ZH.get(
+                    event.event_type, event.event_type.replace("_", " ")
+                )
+                parts = [label]
+                if event.frame_current is not None and event.frame_total is not None:
+                    parts.append(f"分镜 {event.frame_current}/{event.frame_total}")
+                if event.action:
+                    parts.append(_ACTION_ZH.get(event.action, event.action))
+                if event.extra_info:
+                    parts.append(event.extra_info)
+                task_manager.update_progress(
+                    captured_task_id, pct, 100, " · ".join(parts)
+                )
+
             # Build video generation parameters
             video_params = {
                 "text": request_body.text,
@@ -239,39 +295,50 @@ async def generate_video_async(
                 "prompt_prefix": request_body.prompt_prefix,
                 "bgm_path": request_body.bgm_path,
                 "bgm_volume": request_body.bgm_volume,
-                # Progress callback can be added here if needed
-                # "progress_callback": lambda event: task_manager.update_progress(...)
+                "progress_callback": _on_progress,
             }
             
-            # Add TTS workflow if specified
+            # Pass through TTS mode/voice/speed (pipeline already supports `local` / `comfyui`).
+            if request_body.tts_inference_mode:
+                video_params["tts_inference_mode"] = request_body.tts_inference_mode
+            if request_body.tts_voice:
+                video_params["tts_voice"] = request_body.tts_voice
+            if request_body.tts_speed is not None:
+                video_params["tts_speed"] = request_body.tts_speed
+
+            # Add TTS workflow if specified (only meaningful when mode='comfyui')
             if request_body.tts_workflow:
                 video_params["tts_workflow"] = request_body.tts_workflow
-            
+
             # Add ref_audio if specified
             if request_body.ref_audio:
                 video_params["ref_audio"] = request_body.ref_audio
-            
+
             # Legacy voice_id support (deprecated)
             if request_body.voice_id:
                 logger.warning("voice_id parameter is deprecated, please use tts_workflow instead")
                 video_params["voice_id"] = request_body.voice_id
-            
+
             # Add custom template parameters if specified
             if request_body.template_params:
                 video_params["template_params"] = request_body.template_params
-            
+
             result = await pixelle_video.generate_video(**video_params)
-            
+
             # Get file size
             file_size = os.path.getsize(result.video_path) if os.path.exists(result.video_path) else 0
-            
+
             # Convert path to URL
             video_url = path_to_url(request, result.video_path)
-            
+
+            # Track the output dir so the task can be cleanly purged later.
+            output_dir = str(Path(result.video_path).resolve().parent)
+
             return {
                 "video_url": video_url,
                 "duration": result.duration,
-                "file_size": file_size
+                "file_size": file_size,
+                "output_dir": output_dir,
             }
         
         # Start execution

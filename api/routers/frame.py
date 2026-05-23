@@ -14,8 +14,11 @@
 Frame/Template rendering endpoints
 """
 
+from typing import Any, Dict, Optional
+
 from fastapi import APIRouter, HTTPException
 from loguru import logger
+from pydantic import BaseModel
 
 from api.dependencies import PixelleVideoDep
 from api.schemas.frame import FrameRenderRequest, FrameRenderResponse, TemplateParamsResponse
@@ -23,6 +26,26 @@ from pixelle_video.services.frame_html import HTMLFrameGenerator
 from pixelle_video.utils.template_util import parse_template_size, resolve_template_path
 
 router = APIRouter(prefix="/frame", tags=["Frame Rendering"])
+
+
+class TemplateRenderHtmlRequest(BaseModel):
+    """Request body for rendering a template to HTML (no screenshot)."""
+
+    template: str
+    title: Optional[str] = ""
+    text: Optional[str] = ""
+    image: Optional[str] = ""
+    params: Optional[Dict[str, Any]] = None
+
+
+class TemplateRenderHtmlResponse(BaseModel):
+    """Substituted HTML, ready to be loaded by an `<iframe>` for client-side screenshot."""
+
+    html: str
+    width: int
+    height: int
+    media_width: int
+    media_height: int
 
 
 @router.post("/render", response_model=FrameRenderResponse)
@@ -157,5 +180,47 @@ async def get_template_params(
         raise HTTPException(status_code=404, detail=f"Template not found: {template}")
     except Exception as e:
         logger.error(f"Get template params error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/template/render-html", response_model=TemplateRenderHtmlResponse)
+async def render_template_html(payload: TemplateRenderHtmlRequest) -> TemplateRenderHtmlResponse:
+    """
+    Substitute template variables and return raw HTML, *without* rendering it to PNG.
+
+    Used by the desktop app to perform client-side screenshot via the system WebView
+    (Tauri / WebView2 / WKWebView / WebKitGTK), avoiding the Playwright + Chromium dependency.
+
+    The caller is responsible for loading this HTML in an iframe / hidden WebView and
+    capturing it (e.g. via the `html-to-image` JS library).
+    """
+    try:
+        template_path = resolve_template_path(payload.template)
+        width, height = parse_template_size(template_path)
+
+        generator = HTMLFrameGenerator(template_path)
+        media_w, media_h = generator.get_media_size()
+
+        context: Dict[str, Any] = {
+            "title": payload.title or "",
+            "text": payload.text or "",
+            "image": payload.image or "",
+        }
+        if payload.params:
+            context.update(payload.params)
+
+        html = generator._replace_parameters(generator.template, context)
+
+        return TemplateRenderHtmlResponse(
+            html=html,
+            width=width,
+            height=height,
+            media_width=media_w,
+            media_height=media_h,
+        )
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Template not found: {payload.template}")
+    except Exception as e:
+        logger.error(f"render_template_html failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 

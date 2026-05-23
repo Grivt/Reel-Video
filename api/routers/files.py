@@ -16,12 +16,99 @@ File service endpoints
 Provides access to generated files (videos, images, audio) and resource files.
 """
 
+import os
+import uuid
 from pathlib import Path
-from fastapi import APIRouter, HTTPException
+from typing import Iterator, Literal
+
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from loguru import logger
+from pydantic import BaseModel
+
+from pixelle_video.utils.os_util import get_temp_path
+
+
+def _candidate_roots() -> Iterator[Path]:
+    """
+    Roots to search for a requested file, in priority order. Resilient against
+    cwd drift in the PyInstaller bundle: even if Python's getcwd() ends up
+    somewhere unexpected, files written by pipelines to `output/...` are still
+    locatable through PIXELLE_DATA_DIR (writable, per-user) or PIXELLE_VIDEO_ROOT
+    (read-only resources).
+    """
+    seen: set = set()
+    for env_var in ("PIXELLE_DATA_DIR", "PIXELLE_VIDEO_ROOT"):
+        val = os.environ.get(env_var)
+        if val:
+            p = Path(val).resolve()
+            if p not in seen:
+                seen.add(p)
+                yield p
+    cwd = Path.cwd().resolve()
+    if cwd not in seen:
+        yield cwd
 
 router = APIRouter(prefix="/files", tags=["Files"])
+
+# ----------------------------------------------------------------------------
+# Upload endpoint (used by the desktop client to push a local ref_audio file
+# into the sidecar's temp dir so the TTS / voice-cloning pipeline can read it).
+# ----------------------------------------------------------------------------
+
+ALLOWED_KINDS = {
+    "ref_audio": {".mp3", ".wav", ".flac", ".m4a", ".aac", ".ogg"},
+}
+
+
+class UploadResponse(BaseModel):
+    success: bool = True
+    path: str
+    name: str
+    size: int
+
+
+@router.post("/upload", response_model=UploadResponse)
+async def upload_file(
+    file: UploadFile = File(...),
+    kind: Literal["ref_audio"] = "ref_audio",
+) -> UploadResponse:
+    """
+    Upload a small auxiliary file (currently only `ref_audio` for voice cloning).
+
+    The file is written to `<project>/temp/{kind}_{uuid}{ext}` and the
+    returned `path` can be passed back as e.g. `ref_audio` in subsequent
+    video generation / TTS synthesis requests.
+    """
+    suffix = Path(file.filename or "").suffix.lower()
+    allowed = ALLOWED_KINDS.get(kind, set())
+    if allowed and suffix not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail=f"unsupported {kind} extension {suffix!r}, allowed: {sorted(allowed)}",
+        )
+
+    try:
+        target_dir = Path(get_temp_path())
+        target_dir.mkdir(parents=True, exist_ok=True)
+        target = target_dir / f"{kind}_{uuid.uuid4().hex[:12]}{suffix}"
+        body = await file.read()
+        target.write_bytes(body)
+
+        # Return path relative to the project root so the same value can be
+        # used to feed pipelines (which resolve relative paths against cwd).
+        from pixelle_video.utils.os_util import ensure_pixelle_video_root_path
+        root = Path(ensure_pixelle_video_root_path())
+        try:
+            rel = target.relative_to(root).as_posix()
+        except ValueError:
+            rel = str(target)
+        return UploadResponse(path=rel, name=file.filename or target.name, size=len(body))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"upload_file failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{file_path:path}")
@@ -60,40 +147,50 @@ async def get_file(file_path: str):
             "data/templates/",
             "resources/",
         ]
-        
+
         # Check if path starts with allowed prefix, otherwise try output/
         full_path = None
         for prefix in allowed_prefixes:
             if file_path.startswith(prefix):
                 full_path = file_path
                 break
-        
+
         # If no prefix matched, assume it's in output/ (backward compatibility)
         if full_path is None:
             full_path = f"output/{file_path}"
-        
-        abs_path = Path.cwd() / full_path
-        
-        if not abs_path.exists():
+
+        # Search across candidate roots — PIXELLE_DATA_DIR (writable, where
+        # pipelines emit output/) first, then PIXELLE_VIDEO_ROOT (read-only
+        # resources like templates/, workflows/), finally cwd as the dev fallback.
+        abs_path: Path | None = None
+        tried: list[Path] = []
+        for root in _candidate_roots():
+            candidate = (root / full_path).resolve()
+            tried.append(candidate)
+            if candidate.is_file():
+                abs_path = candidate
+                break
+
+        if abs_path is None:
+            logger.warning(
+                f"file_path={file_path!r} not found; searched: "
+                + ", ".join(str(p) for p in tried)
+            )
             raise HTTPException(status_code=404, detail=f"File not found: {file_path}")
-        
-        if not abs_path.is_file():
-            raise HTTPException(status_code=400, detail=f"Path is not a file: {file_path}")
-        
-        # Security: only allow access to specified directories
-        try:
-            rel_path = abs_path.relative_to(Path.cwd())
-            rel_path_str = str(rel_path)
-            
-            # Check if path starts with any allowed prefix
-            is_allowed = any(rel_path_str.startswith(prefix.rstrip('/')) for prefix in allowed_prefixes)
-            
-            if not is_allowed:
-                raise HTTPException(
-                    status_code=403, 
-                    detail=f"Access denied: only {', '.join(p.rstrip('/') for p in allowed_prefixes)} directories are accessible"
-                )
-        except ValueError:
+
+        # Security: only allow access to the candidate roots' allowed subdirs.
+        is_allowed = False
+        for root in _candidate_roots():
+            try:
+                rel = abs_path.relative_to(root.resolve())
+                rel_str = str(rel).replace("\\", "/")
+                if any(rel_str.startswith(prefix.rstrip("/")) for prefix in allowed_prefixes):
+                    is_allowed = True
+                    break
+            except ValueError:
+                continue
+
+        if not is_allowed:
             raise HTTPException(status_code=403, detail="Access denied")
         
         # Determine media type

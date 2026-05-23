@@ -46,17 +46,20 @@ def get_pixelle_video_root_path() -> str:
 
 def ensure_pixelle_video_root_path() -> str:
     """
-    Ensure Pixelle-Video root path exists and return the path
-    
-    Returns:
-        Root path as string
+    Return the Pixelle-Video root path.
+
+    The legacy implementation also created `output/` under the root as a side
+    effect, which assumed the root was writable. In the desktop bundle that
+    assumption breaks — PIXELLE_VIDEO_ROOT points at the read-only resource dir
+    inside the .app/.exe (e.g. `/Volumes/.../Pixelle Video.app/Contents/Resources/`
+    on a DMG mount), so the side-effect mkdir crashed with errno 30 (Read-only
+    file system) during pipeline init.
+
+    Writable directories (output/, temp/, data/) are now created on-demand by
+    get_output_path / get_temp_path / get_data_path against the *writable* root
+    (PIXELLE_DATA_DIR, set by the Tauri shell), so no side-effect mkdir here.
     """
-    root_path = get_pixelle_video_root_path()
-    root_path_obj = Path(root_path)
-    output_dir = root_path_obj / 'output'
-    output_dir.mkdir(parents=True, exist_ok=True)
-    
-    return root_path
+    return get_pixelle_video_root_path()
 
 
 def get_root_path(*paths: str) -> str:
@@ -79,27 +82,55 @@ def get_root_path(*paths: str) -> str:
     return root_path
 
 
+def get_writable_root_path() -> str:
+    """
+    Get the writable root path for user-generated content (output, temp, data).
+
+    Resolution order:
+        1. PIXELLE_DATA_DIR  — explicit per-user writable dir (set by the
+           Tauri desktop shell to %APPDATA%\\com.pixelle.video\\ etc.).
+        2. PIXELLE_VIDEO_ROOT — when no separate data dir is configured
+           (dev mode, Streamlit run), fall back to the project root.
+        3. Current working directory — last resort.
+
+    Important: this is DIFFERENT from `get_pixelle_video_root_path()`, which
+    always points at read-only project resources (templates/, workflows/,
+    bgm/, web/i18n/). Mixing the two writes pipeline artifacts under the
+    install dir, which fails on signed installs and silently swallows the
+    PermissionError — leaving generated images orphaned and frame composition
+    falling back to the template's "Frame Image" alt text.
+    """
+    data_dir = os.environ.get("PIXELLE_DATA_DIR")
+    if data_dir:
+        # Don't check exists() here — callers (get_output_path etc.) call
+        # os.makedirs(..., exist_ok=True) right after, so a missing dir is
+        # fine. Silently falling back to PIXELLE_VIDEO_ROOT would mask the
+        # exact bug this function exists to prevent.
+        return str(Path(data_dir))
+    return get_pixelle_video_root_path()
+
+
 def get_temp_path(*paths: str) -> str:
     """
     Get path relative to Pixelle-Video temp folder
-    
+
     Ensures temp directory exists before returning path.
-    
+
     Args:
         *paths: Path components to join
-    
+
     Returns:
         Absolute path to temp directory or file
-    
+
     Example:
         get_temp_path("audio.mp3")
         # Returns: "/path/to/project/temp/audio.mp3"
     """
-    temp_path = get_root_path("temp")
-    
+    temp_path = os.path.join(get_writable_root_path(), "temp")
+
     # Ensure temp directory exists
     os.makedirs(temp_path, exist_ok=True)
-    
+
     if paths:
         return os.path.join(temp_path, *paths)
     return temp_path
@@ -110,22 +141,22 @@ def get_data_path(*paths: str) -> str:
     Get path relative to Pixelle-Video data folder
 
     Ensures data directory exists before returning path.
-    
+
     Args:
         *paths: Path components to join
-    
+
     Returns:
         Absolute path to data directory or file
-    
+
     Example:
         get_data_path("videos", "output.mp4")
         # Returns: "/path/to/project/data/videos/output.mp4"
     """
-    data_path = get_root_path("data")
+    data_path = os.path.join(get_writable_root_path(), "data")
 
     # Ensure data directory exists
     os.makedirs(data_path, exist_ok=True)
-    
+
     if paths:
         return os.path.join(data_path, *paths)
     return data_path
@@ -136,22 +167,22 @@ def get_output_path(*paths: str) -> str:
     Get path relative to Pixelle-Video output folder
 
     Ensures output directory exists before returning path.
-    
+
     Args:
         *paths: Path components to join
-    
+
     Returns:
         Absolute path to output directory or file
-    
+
     Example:
         get_output_path("video.mp4")
         # Returns: "/path/to/project/output/video.mp4"
     """
-    output_path = get_root_path("output")
+    output_path = os.path.join(get_writable_root_path(), "output")
 
     # Ensure output directory exists
     os.makedirs(output_path, exist_ok=True)
-    
+
     if paths:
         return os.path.join(output_path, *paths)
     return output_path

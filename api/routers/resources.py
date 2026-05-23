@@ -28,9 +28,15 @@ from api.schemas.resources import (
     TemplateListResponse,
     BGMInfo,
     BGMListResponse,
+    TTSVoiceInfo,
+    TTSVoiceListResponse,
 )
+from pixelle_video.tts_voices import EDGE_TTS_VOICES
 from pixelle_video.utils.os_util import list_resource_files, get_root_path, get_data_path
-from pixelle_video.utils.template_util import get_all_templates_with_info
+from pixelle_video.utils.template_util import (
+    get_all_templates_with_info,
+    get_template_type,
+)
 
 router = APIRouter(prefix="/resources", tags=["Resources"])
 
@@ -185,6 +191,7 @@ async def list_templates():
                 width=t.display_info.width,
                 height=t.display_info.height,
                 orientation=t.display_info.orientation,
+                template_type=get_template_type(t.display_info.name),
                 path=t.template_path,
                 key=t.template_path
             ))
@@ -194,6 +201,43 @@ async def list_templates():
     except Exception as e:
         logger.error(f"List templates error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/tts/voices", response_model=TTSVoiceListResponse)
+async def list_tts_voices() -> TTSVoiceListResponse:
+    """
+    List voices available for local Edge TTS inference.
+
+    `display_name` is resolved from the project's own i18n bundle (web/i18n/locales/zh_CN.json)
+    so the desktop client and the Streamlit web app stay consistent.
+    Falls back to the voice id if a label is missing.
+    """
+    import json
+    from pixelle_video.utils.os_util import get_root_path
+
+    label_map: dict = {}
+    try:
+        i18n_path = Path(get_root_path("web/i18n/locales/zh_CN.json"))
+        if i18n_path.exists():
+            with open(i18n_path, "r", encoding="utf-8") as f:
+                raw = json.load(f) or {}
+                # zh_CN.json wraps translations under "t" (flat dotted keys).
+                label_map = raw.get("t", raw) if isinstance(raw, dict) else {}
+    except Exception as e:
+        logger.warning(f"Could not load zh_CN.json for TTS voice labels: {e}")
+
+    voices = []
+    for v in EDGE_TTS_VOICES:
+        key = v.get("label_key") or ""
+        display = label_map.get(key) or v["id"]
+        voices.append(TTSVoiceInfo(
+            id=v["id"],
+            display_name=display,
+            locale=v["locale"],
+            gender=v["gender"],
+            label_key=key or None,
+        ))
+    return TTSVoiceListResponse(voices=voices)
 
 
 @router.get("/bgm", response_model=BGMListResponse)

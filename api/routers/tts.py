@@ -63,18 +63,25 @@ async def tts_synthesize(
         
         # Build TTS parameters
         tts_params = {"text": request.text}
-        
-        # Add workflow if specified
+
+        if request.inference_mode:
+            tts_params["inference_mode"] = request.inference_mode
+        if request.voice:
+            tts_params["voice"] = request.voice
+        if request.speed is not None:
+            tts_params["speed"] = request.speed
+
+        # Add workflow if specified (ComfyUI mode)
         if request.workflow:
             tts_params["workflow"] = request.workflow
-        
+
         # Add ref_audio if specified
         if request.ref_audio:
             tts_params["ref_audio"] = request.ref_audio
-        
+
         # Legacy voice_id support (deprecated)
-        if request.voice_id and not request.workflow:
-            logger.warning("voice_id parameter is deprecated, please use workflow instead")
+        if request.voice_id and not request.workflow and not request.voice:
+            logger.warning("voice_id parameter is deprecated, please use voice + inference_mode='local' instead")
             tts_params["voice"] = request.voice_id
         
         # Call TTS service

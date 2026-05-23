@@ -1,0 +1,36 @@
+# Sidecar-only runtime deps for the Tauri desktop bundle.
+#
+# Excluded vs project pyproject.toml:
+#   - streamlit      (web/ Streamlit UI is not bundled into the desktop app)
+#   - fastmcp        (not referenced by api/ or pixelle_video/; MCP server entry only)
+#
+# Kept (and why):
+#   - playwright     (pixelle_video/services/frame_html.py renders frames via Chromium)
+#   - moviepy        (video concat / muxing)
+#   - comfykit       (ComfyUI / RunningHub workflow execution)
+#   - edge-tts       (local TTS, replaces external service for default voices)
+
+# NOTE: the project itself is installed editable in a separate step by
+# build.sh / build.ps1 (`uv pip install -e .` from the project root). Keeping
+# it out of this file avoids relative-path ambiguity between uv versions.
+
+# Runtime libs (mirrored from pyproject.toml, minus the excluded ones).
+pydantic>=2.0.0
+loguru>=0.7.0
+pyyaml>=6.0.0
+edge-tts==7.2.7
+certifi>=2025.10.5
+ffmpeg-python>=0.2.0
+httpx>=0.28.1
+pillow>=10.0.0,<12
+openai>=2.6.0
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+python-multipart>=0.0.12
+comfykit>=0.1.12
+beautifulsoup4>=4.14.2
+moviepy==1.0.3
+playwright>=1.58.0
+
+# Build tool.
+pyinstaller>=6.10.0

@@ -148,3 +148,24 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+
+Bundled binaries (desktop installer only):
+--------------------------------------------------------------------
+The Pixelle Video desktop installer redistributes the following pre-built,
+unmodified binaries alongside the application:
+
+1. FFmpeg (ffprobe)
+   Homepage : https://ffmpeg.org/
+   Source   : https://git.ffmpeg.org/ffmpeg.git
+   License  : GNU Lesser General Public License v2.1 or later (LGPL-2.1+)
+              Full text: https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+   Builds   : Windows  — https://www.gyan.dev/ffmpeg/builds/ (LGPL configuration)
+              macOS    — https://evermeet.cx/ffmpeg/ (LGPL configuration)
+   Modified : No. The bundled binary is the upstream build, unmodified.
+
+2. FFmpeg (ffmpeg, via the `imageio-ffmpeg` Python package)
+   Same upstream project as above. The binary is shipped by the
+   `imageio-ffmpeg` PyPI package and embedded into the desktop bundle by
+   PyInstaller. License and modification status: identical to (1).

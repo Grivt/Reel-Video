@@ -43,8 +43,25 @@ class TemplateInfo(BaseModel):
     width: int = Field(..., description="Width in pixels")
     height: int = Field(..., description="Height in pixels")
     orientation: str = Field(..., description="Orientation (portrait/landscape/square)")
+    template_type: str = Field("image", description="Template category: static | image | video")
     path: str = Field(..., description="Full path to template file")
     key: str = Field(..., description="Template key (size/name)")
+
+
+class TTSVoiceInfo(BaseModel):
+    """Edge TTS voice descriptor"""
+    id: str = Field(..., description="Voice ID, e.g. 'zh-CN-YunjianNeural'")
+    display_name: str = Field(..., description="Localized display name; falls back to voice id")
+    locale: str = Field(..., description="BCP-47 locale, e.g. 'zh-CN'")
+    gender: str = Field(..., description="Voice gender: male | female")
+    label_key: Optional[str] = Field(None, description="i18n label key")
+
+
+class TTSVoiceListResponse(BaseModel):
+    """List of voices available for local Edge TTS inference"""
+    success: bool = True
+    message: str = "Success"
+    voices: List[TTSVoiceInfo]
 
 
 class TemplateListResponse(BaseModel):
