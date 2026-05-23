@@ -23,24 +23,24 @@ from loguru import logger
 
 from web.i18n import tr, get_language
 from web.utils.async_helpers import run_async
-from pixelle_video.models.progress import ProgressEvent
-from pixelle_video.config import config_manager
+from reel_video.models.progress import ProgressEvent
+from reel_video.config import config_manager
 
 
-def render_output_preview(pixelle_video, video_params):
+def render_output_preview(reel_video, video_params):
     """Render output preview section (right column)"""
     # Check if batch mode
     is_batch = video_params.get("batch_mode", False)
     
     if is_batch:
         # Batch generation mode
-        render_batch_output(pixelle_video, video_params)
+        render_batch_output(reel_video, video_params)
     else:
         # Single video generation mode (original logic)
-        render_single_output(pixelle_video, video_params)
+        render_single_output(reel_video, video_params)
 
 
-def render_single_output(pixelle_video, video_params):
+def render_single_output(reel_video, video_params):
     """Render single video generation output (original logic, unchanged)"""
     # Extract parameters from video_params dict
     text = video_params.get("text", "")
@@ -155,7 +155,7 @@ def render_single_output(pixelle_video, video_params):
                 if custom_values_for_video:
                     video_params["template_params"] = custom_values_for_video
                 
-                result = run_async(pixelle_video.generate_video(**video_params))
+                result = run_async(reel_video.generate_video(**video_params))
                 
                 # Calculate total generation time
                 total_generation_time = time.time() - start_time
@@ -172,7 +172,7 @@ def render_single_output(pixelle_video, video_params):
                 file_size_mb = result.file_size / (1024 * 1024)
                 
                 # Parse video size from template path
-                from pixelle_video.utils.template_util import parse_template_size, resolve_template_path
+                from reel_video.utils.template_util import parse_template_size, resolve_template_path
                 template_path = resolve_template_path(result.storyboard.config.frame_template)
                 video_width, video_height = parse_template_size(template_path)
                 
@@ -212,7 +212,7 @@ def render_single_output(pixelle_video, video_params):
                 st.stop()
 
 
-def render_batch_output(pixelle_video, video_params):
+def render_batch_output(reel_video, video_params):
     """Render batch generation output (minimal, redirect to History)"""
     topics = video_params.get("topics", [])
     
@@ -339,7 +339,7 @@ def render_batch_output(pixelle_video, video_params):
             start_time = time.time()
             
             batch_result = batch_manager.execute_batch(
-                pixelle_video=pixelle_video,
+                reel_video=reel_video,
                 topics=topics,
                 shared_config=shared_config,
                 overall_progress_callback=update_overall_progress,

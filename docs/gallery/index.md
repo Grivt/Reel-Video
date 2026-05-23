@@ -1,8 +1,8 @@
 # 🎬 视频示例库 / Video Gallery
 
-展示使用 Pixelle-Video 制作的各类视频案例，包含完整的制作参数和资源下载。
+展示使用 Reel-Video 制作的各类视频案例，包含完整的制作参数和资源下载。
 
-Showcase of videos created with Pixelle-Video, including complete production parameters and downloadable resources.
+Showcase of videos created with Reel-Video, including complete production parameters and downloadable resources.
 
 ---
 

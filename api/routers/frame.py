@@ -20,10 +20,10 @@ from fastapi import APIRouter, HTTPException
 from loguru import logger
 from pydantic import BaseModel
 
-from api.dependencies import PixelleVideoDep
+from api.dependencies import ReelVideoDep
 from api.schemas.frame import FrameRenderRequest, FrameRenderResponse, TemplateParamsResponse
-from pixelle_video.services.frame_html import HTMLFrameGenerator
-from pixelle_video.utils.template_util import parse_template_size, resolve_template_path
+from reel_video.services.frame_html import HTMLFrameGenerator
+from reel_video.utils.template_util import parse_template_size, resolve_template_path
 
 router = APIRouter(prefix="/frame", tags=["Frame Rendering"])
 
@@ -51,7 +51,7 @@ class TemplateRenderHtmlResponse(BaseModel):
 @router.post("/render", response_model=FrameRenderResponse)
 async def render_frame(
     request: FrameRenderRequest,
-    pixelle_video: PixelleVideoDep
+    reel_video: ReelVideoDep
 ):
     """
     Render a single frame using HTML template

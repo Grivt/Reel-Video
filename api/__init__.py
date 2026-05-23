@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Pixelle-Video API Layer
+Reel-Video API Layer
 
 FastAPI-based REST API for video generation services.
 """

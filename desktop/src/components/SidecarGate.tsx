@@ -49,7 +49,7 @@ export function SidecarGate({ children }: Props) {
                   uv run python api/app.py --host 127.0.0.1 --port 8000
                 </Text>
                 <br />
-                然后设置环境变量 <Text code>PIXELLE_SIDECAR_URL=http://127.0.0.1:8000</Text> 重启应用。
+                然后设置环境变量 <Text code>REEL_SIDECAR_URL=http://127.0.0.1:8000</Text> 重启应用。
               </Paragraph>
               <Button type="primary" onClick={() => window.location.reload()}>
                 重试
@@ -66,7 +66,7 @@ export function SidecarGate({ children }: Props) {
       <Space direction="vertical" size="large" align="center">
         <Spin indicator={<LoadingOutlined style={{ fontSize: 40 }} spin />} />
         <Typography.Title level={4} style={{ margin: 0 }}>
-          正在启动 Pixelle Video 后端服务…
+          正在启动 Real Video 后端服务…
         </Typography.Title>
         <Text type="secondary">首次启动需要加载依赖，约 5–15 秒</Text>
       </Space>

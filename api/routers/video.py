@@ -48,7 +48,7 @@ _ACTION_ZH = {
     "compose": "合成",
 }
 
-from api.dependencies import PixelleVideoDep
+from api.dependencies import ReelVideoDep
 from api.schemas.video import (
     VideoGenerateRequest,
     VideoGenerateResponse,
@@ -116,7 +116,7 @@ def path_to_url(request: Request, file_path: str) -> str:
 @router.post("/generate/sync", response_model=VideoGenerateResponse)
 async def generate_video_sync(
     request_body: VideoGenerateRequest,
-    pixelle_video: PixelleVideoDep,
+    reel_video: ReelVideoDep,
     request: Request
 ):
     """
@@ -139,8 +139,8 @@ async def generate_video_sync(
         if not request_body.frame_template:
             raise ValueError("frame_template is required to determine media size")
         
-        from pixelle_video.services.frame_html import HTMLFrameGenerator
-        from pixelle_video.utils.template_util import resolve_template_path
+        from reel_video.services.frame_html import HTMLFrameGenerator
+        from reel_video.utils.template_util import resolve_template_path
         template_path = resolve_template_path(request_body.frame_template)
         generator = HTMLFrameGenerator(template_path)
         media_width, media_height = generator.get_media_size()
@@ -192,7 +192,7 @@ async def generate_video_sync(
             video_params["template_params"] = request_body.template_params
 
         # Call video generator service
-        result = await pixelle_video.generate_video(**video_params)
+        result = await reel_video.generate_video(**video_params)
         
         # Get file size
         file_size = os.path.getsize(result.video_path) if os.path.exists(result.video_path) else 0
@@ -214,7 +214,7 @@ async def generate_video_sync(
 @router.post("/generate/async", response_model=VideoGenerateAsyncResponse)
 async def generate_video_async(
     request_body: VideoGenerateRequest,
-    pixelle_video: PixelleVideoDep,
+    reel_video: ReelVideoDep,
     request: Request
 ):
     """
@@ -250,8 +250,8 @@ async def generate_video_async(
             if not request_body.frame_template:
                 raise ValueError("frame_template is required to determine media size")
             
-            from pixelle_video.services.frame_html import HTMLFrameGenerator
-            from pixelle_video.utils.template_util import resolve_template_path
+            from reel_video.services.frame_html import HTMLFrameGenerator
+            from reel_video.utils.template_util import resolve_template_path
             template_path = resolve_template_path(request_body.frame_template)
             generator = HTMLFrameGenerator(template_path)
             media_width, media_height = generator.get_media_size()
@@ -323,7 +323,7 @@ async def generate_video_async(
             if request_body.template_params:
                 video_params["template_params"] = request_body.template_params
 
-            result = await pixelle_video.generate_video(**video_params)
+            result = await reel_video.generate_video(**video_params)
 
             # Get file size
             file_size = os.path.getsize(result.video_path) if os.path.exists(result.video_path) else 0

@@ -1,20 +1,20 @@
 # API Overview
 
-Pixelle-Video provides both Python SDK and HTTP REST API.
+Reel-Video provides both Python SDK and HTTP REST API.
 
 ---
 
 ## Python SDK
 
-### PixelleVideoCore
+### ReelVideoCore
 
 Main service class providing video generation functionality.
 
 ```python
-from pixelle_video.service import PixelleVideoCore
+from reel_video.service import ReelVideoCore
 
-pixelle = PixelleVideoCore()
-await pixelle.initialize()
+reel = ReelVideoCore()
+await reel.initialize()
 ```
 
 ### generate_video()

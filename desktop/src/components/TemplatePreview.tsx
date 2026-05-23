@@ -45,7 +45,7 @@ const RENDER_WIDTH = 320;
  */
 export function TemplatePreview({
   templateKey,
-  title = "Pixelle Video",
+  title = "Real Video",
   text = "这里是测试文案 — 实际生成时会按分镜替换。",
   image = "",
   value,

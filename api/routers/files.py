@@ -26,7 +26,7 @@ from fastapi.responses import FileResponse
 from loguru import logger
 from pydantic import BaseModel
 
-from pixelle_video.utils.os_util import get_temp_path
+from reel_video.utils.os_util import get_temp_path
 
 
 def _candidate_roots() -> Iterator[Path]:
@@ -34,11 +34,11 @@ def _candidate_roots() -> Iterator[Path]:
     Roots to search for a requested file, in priority order. Resilient against
     cwd drift in the PyInstaller bundle: even if Python's getcwd() ends up
     somewhere unexpected, files written by pipelines to `output/...` are still
-    locatable through PIXELLE_DATA_DIR (writable, per-user) or PIXELLE_VIDEO_ROOT
+    locatable through REEL_DATA_DIR (writable, per-user) or REEL_VIDEO_ROOT
     (read-only resources).
     """
     seen: set = set()
-    for env_var in ("PIXELLE_DATA_DIR", "PIXELLE_VIDEO_ROOT"):
+    for env_var in ("REEL_DATA_DIR", "REEL_VIDEO_ROOT"):
         val = os.environ.get(env_var)
         if val:
             p = Path(val).resolve()
@@ -97,8 +97,8 @@ async def upload_file(
 
         # Return path relative to the project root so the same value can be
         # used to feed pipelines (which resolve relative paths against cwd).
-        from pixelle_video.utils.os_util import ensure_pixelle_video_root_path
-        root = Path(ensure_pixelle_video_root_path())
+        from reel_video.utils.os_util import ensure_reel_video_root_path
+        root = Path(ensure_reel_video_root_path())
         try:
             rel = target.relative_to(root).as_posix()
         except ValueError:
@@ -159,8 +159,8 @@ async def get_file(file_path: str):
         if full_path is None:
             full_path = f"output/{file_path}"
 
-        # Search across candidate roots — PIXELLE_DATA_DIR (writable, where
-        # pipelines emit output/) first, then PIXELLE_VIDEO_ROOT (read-only
+        # Search across candidate roots — REEL_DATA_DIR (writable, where
+        # pipelines emit output/) first, then REEL_VIDEO_ROOT (read-only
         # resources like templates/, workflows/), finally cwd as the dev fallback.
         abs_path: Path | None = None
         tried: list[Path] = []

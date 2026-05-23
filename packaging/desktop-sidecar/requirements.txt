@@ -2,10 +2,10 @@
 #
 # Excluded vs project pyproject.toml:
 #   - streamlit      (web/ Streamlit UI is not bundled into the desktop app)
-#   - fastmcp        (not referenced by api/ or pixelle_video/; MCP server entry only)
+#   - fastmcp        (not referenced by api/ or reel_video/; MCP server entry only)
 #
 # Kept (and why):
-#   - playwright     (pixelle_video/services/frame_html.py renders frames via Chromium)
+#   - playwright     (reel_video/services/frame_html.py renders frames via Chromium)
 #   - moviepy        (video concat / muxing)
 #   - comfykit       (ComfyUI / RunningHub workflow execution)
 #   - edge-tts       (local TTS, replaces external service for default voices)

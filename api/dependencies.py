@@ -13,49 +13,49 @@
 """
 FastAPI Dependencies
 
-Provides dependency injection for PixelleVideoCore and other services.
+Provides dependency injection for ReelVideoCore and other services.
 """
 
 from typing import Annotated
 from fastapi import Depends
 from loguru import logger
 
-from pixelle_video.service import PixelleVideoCore
+from reel_video.service import ReelVideoCore
 
 
-# Global Pixelle-Video instance
-_pixelle_video_instance: PixelleVideoCore = None
+# Global Reel-Video instance
+_reel_video_instance: ReelVideoCore = None
 
 
-async def get_pixelle_video() -> PixelleVideoCore:
+async def get_reel_video() -> ReelVideoCore:
     """
-    Get Pixelle-Video core instance (dependency injection)
+    Get Reel-Video core instance (dependency injection)
     
     Returns:
-        PixelleVideoCore instance
+        ReelVideoCore instance
     """
-    global _pixelle_video_instance
+    global _reel_video_instance
     
-    if _pixelle_video_instance is None:
-        _pixelle_video_instance = PixelleVideoCore()
-        await _pixelle_video_instance.initialize()
-        logger.info("✅ Pixelle-Video initialized for API")
+    if _reel_video_instance is None:
+        _reel_video_instance = ReelVideoCore()
+        await _reel_video_instance.initialize()
+        logger.info("✅ Reel-Video initialized for API")
     
-    return _pixelle_video_instance
+    return _reel_video_instance
 
 
-async def shutdown_pixelle_video():
-    """Shutdown Pixelle-Video instance and cleanup resources"""
-    global _pixelle_video_instance
-    if _pixelle_video_instance:
-        logger.info("Shutting down Pixelle-Video...")
-        await _pixelle_video_instance.cleanup()
-        _pixelle_video_instance = None
+async def shutdown_reel_video():
+    """Shutdown Reel-Video instance and cleanup resources"""
+    global _reel_video_instance
+    if _reel_video_instance:
+        logger.info("Shutting down Reel-Video...")
+        await _reel_video_instance.cleanup()
+        _reel_video_instance = None
     
-    from pixelle_video.services.frame_html import HTMLFrameGenerator
+    from reel_video.services.frame_html import HTMLFrameGenerator
     await HTMLFrameGenerator.close_browser()
 
 
 # Type alias for dependency injection
-PixelleVideoDep = Annotated[PixelleVideoCore, Depends(get_pixelle_video)]
+ReelVideoDep = Annotated[ReelVideoCore, Depends(get_reel_video)]
 

@@ -1,9 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 #
-# PyInstaller spec for the Pixelle Video desktop sidecar.
+# PyInstaller spec for the Real Video desktop sidecar.
 #
-# Produces an onedir bundle at `dist/pixelle-api/`:
-#   pixelle-api.exe              ← launcher
+# Produces an onedir bundle at `dist/reel-api/`:
+#   reel-api.exe              ← launcher
 #   _internal/                   ← Python runtime + deps
 #
 # After this builds, `build.ps1` copies the bundle into
@@ -91,10 +91,10 @@ hiddenimports += [
     "asyncio.windows_events",  # win32 only; ignored on other platforms
 ]
 
-# api/ and pixelle_video/ are imported via the bootstrap in sidecar_entry.py;
+# api/ and reel_video/ are imported via the bootstrap in sidecar_entry.py;
 # also list them explicitly so PyInstaller follows transitive imports.
 hiddenimports += collect_submodules("api")
-hiddenimports += collect_submodules("pixelle_video")
+hiddenimports += collect_submodules("reel_video")
 
 # ------------------------------------------------------------------------------
 a = Analysis(
@@ -135,7 +135,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name="pixelle-api",
+    name="reel-api",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -155,5 +155,5 @@ coll = COLLECT(
     strip=False,
     upx=False,
     upx_exclude=[],
-    name="pixelle-api",
+    name="reel-api",
 )

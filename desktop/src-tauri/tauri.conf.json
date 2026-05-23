@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Pixelle Video",
+  "productName": "Real Video",
   "version": "0.1.0",
-  "identifier": "com.pixelle.video",
+  "identifier": "com.reel.video",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Pixelle Video",
+        "title": "Real Video",
         "width": 1280,
         "height": 820,
         "minWidth": 1024,
@@ -38,7 +38,7 @@
       "icons/icon.ico"
     ],
     "resources": {
-      "binaries/pixelle-api": "binaries/pixelle-api",
+      "binaries/reel-api": "binaries/reel-api",
       "../../templates": "templates",
       "../../workflows": "workflows",
       "../../bgm": "bgm",
@@ -47,6 +47,6 @@
     },
     "category": "Productivity",
     "shortDescription": "AI 全自动短视频生成桌面端",
-    "longDescription": "Pixelle Video 桌面端：输入主题即可自动生成视频文案、AI 配图、TTS 语音并合成视频。基于 Tauri 2.0 跨平台。"
+    "longDescription": "Real Video 桌面端：输入主题即可自动生成视频文案、AI 配图、TTS 语音并合成视频。基于 Tauri 2.0 跨平台。"
   }
 }

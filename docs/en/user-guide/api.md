@@ -1,22 +1,22 @@
 # API Usage
 
-Pixelle-Video provides a complete Python API for easy integration into your projects.
+Reel-Video provides a complete Python API for easy integration into your projects.
 
 ---
 
 ## Quick Start
 
 ```python
-from pixelle_video.service import PixelleVideoCore
+from reel_video.service import ReelVideoCore
 import asyncio
 
 async def main():
     # Initialize
-    pixelle = PixelleVideoCore()
-    await pixelle.initialize()
+    reel = ReelVideoCore()
+    await reel.initialize()
     
     # Generate video
-    result = await pixelle.generate_video(
+    result = await reel.generate_video(
         text="Why develop a reading habit",
         mode="generate",
         n_scenes=5

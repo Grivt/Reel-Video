@@ -1,12 +1,12 @@
 [package]
-name = "pixelle-video-desktop"
+name = "reel-video-desktop"
 version = "0.1.0"
-description = "Pixelle Video desktop shell (Tauri 2.0)"
-authors = ["Pixelle.AI"]
+description = "Real Video desktop shell (Tauri 2.0)"
+authors = ["Reel.AI"]
 edition = "2021"
 
 [lib]
-name = "pixelle_video_lib"
+name = "reel_video_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

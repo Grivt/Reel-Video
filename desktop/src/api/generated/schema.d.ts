@@ -101,7 +101,7 @@ export interface paths {
          *     Examples:
          *     ```json
          *     {
-         *         "text": "Hello, welcome to Pixelle-Video!",
+         *         "text": "Hello, welcome to Reel-Video!",
          *         "workflow": "runninghub/tts_edge.json"
          *     }
          *     ```
@@ -1082,7 +1082,7 @@ export interface components {
             version: string;
             /**
              * Service
-             * @default Pixelle-Video API
+             * @default Reel-Video API
              */
             service: string;
         };
@@ -1360,7 +1360,7 @@ export interface components {
          * TTSSynthesizeRequest
          * @description TTS synthesis request
          * @example {
-         *       "text": "Hello, welcome to Pixelle-Video!",
+         *       "text": "Hello, welcome to Reel-Video!",
          *       "workflow": "runninghub/tts_edge.json"
          *     }
          */

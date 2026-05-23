@@ -1,13 +1,13 @@
-site_name: Pixelle-Video
+site_name: Reel-Video
 site_description: AI Video Creator - Generate a short video in 3 minutes
-site_author: Pixelle.AI
-site_url: https://AIDC-AI.github.io/Pixelle-Video/
+site_author: Reel.AI
+site_url: https://AIDC-AI.github.io/Reel-Video/
 
-repo_name: AIDC-AI/Pixelle-Video
-repo_url: https://github.com/AIDC-AI/Pixelle-Video
+repo_name: AIDC-AI/Reel-Video
+repo_url: https://github.com/AIDC-AI/Reel-Video
 edit_uri: edit/main/docs/
 
-copyright: Copyright &copy; 2025 Pixelle.AI
+copyright: Copyright &copy; 2025 Reel.AI
 
 theme:
   name: material
@@ -164,7 +164,7 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/AIDC-AI/Pixelle-Video
+      link: https://github.com/AIDC-AI/Reel-Video
       name: GitHub Repository
 
 extra_css:

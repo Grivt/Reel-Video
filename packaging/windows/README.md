@@ -1,6 +1,6 @@
 # Windows Package Builder
 
-Automated build system for creating Windows portable packages of Pixelle-Video.
+Automated build system for creating Windows portable packages of Reel-Video.
 
 ## Quick Start
 
@@ -39,18 +39,18 @@ The build process creates:
 
 ```
 dist/windows/
-├── Pixelle-Video-v*-win64/             # Build directory (version number varies)
+├── Reel-Video-v*-win64/             # Build directory (version number varies)
 │   ├── python/                         # Python embedded
 │   ├── tools/                          # FFmpeg, etc.
-│   ├── Pixelle-Video/                  # Project files
+│   ├── Reel-Video/                  # Project files
 │   ├── data/                           # User data (empty)
 │   ├── output/                         # Output (empty)
 │   ├── start.bat                       # Main launcher
 │   ├── start_api.bat                   # API launcher
 │   ├── start_web.bat                   # Web launcher
 │   └── README.txt                      # User guide
-├── Pixelle-Video-v*-win64.zip          # ZIP package (version number varies)
-└── Pixelle-Video-v*-win64.zip.sha256   # Checksum (version number varies)
+├── Reel-Video-v*-win64.zip          # ZIP package (version number varies)
+└── Reel-Video-v*-win64.zip.sha256   # Checksum (version number varies)
 ```
 
 ## Build Process
@@ -205,12 +205,12 @@ Users verify download:
 
 ```bash
 # Windows PowerShell
-Get-FileHash Pixelle-Video-v*-win64.zip -Algorithm SHA256
+Get-FileHash Reel-Video-v*-win64.zip -Algorithm SHA256
 ```
 
 Compare with `.sha256` file.
 
 ## License
 
-Same as Pixelle-Video project license.
+Same as Reel-Video project license.
 

@@ -39,15 +39,15 @@ def init_i18n():
     set_language(st.session_state.language)
 
 
-def get_pixelle_video():
+def get_reel_video():
     """
-    Get initialized Pixelle-Video instance with proper caching and cleanup
+    Get initialized Reel-Video instance with proper caching and cleanup
     
     Uses st.session_state to cache the instance per user session.
     ComfyKit is lazily initialized and automatically recreated on config changes.
     """
-    from pixelle_video.service import PixelleVideoCore
-    from pixelle_video.config import config_manager
+    from reel_video.service import ReelVideoCore
+    from reel_video.config import config_manager
     
     # Compute config hash for change detection
     import hashlib
@@ -59,31 +59,31 @@ def get_pixelle_video():
     
     # Check if we need to create or recreate core instance
     need_recreate = False
-    if 'pixelle_video' not in st.session_state:
+    if 'reel_video' not in st.session_state:
         need_recreate = True
-        logger.info("Creating new PixelleVideoCore instance (first time)")
-    elif st.session_state.get('pixelle_video_config_hash') != config_hash:
+        logger.info("Creating new ReelVideoCore instance (first time)")
+    elif st.session_state.get('reel_video_config_hash') != config_hash:
         need_recreate = True
-        logger.info("Configuration changed, recreating PixelleVideoCore instance")
+        logger.info("Configuration changed, recreating ReelVideoCore instance")
         # Cleanup old instance
-        old_core = st.session_state.pixelle_video
+        old_core = st.session_state.reel_video
         try:
             run_async(old_core.cleanup())
         except Exception as e:
-            logger.warning(f"Failed to cleanup old PixelleVideoCore: {e}")
+            logger.warning(f"Failed to cleanup old ReelVideoCore: {e}")
     
     if need_recreate:
         # Create and initialize new instance
-        pixelle_video = PixelleVideoCore()
-        run_async(pixelle_video.initialize())
+        reel_video = ReelVideoCore()
+        run_async(reel_video.initialize())
         
         # Cache in session state
-        st.session_state.pixelle_video = pixelle_video
-        st.session_state.pixelle_video_config_hash = config_hash
-        logger.info("✅ PixelleVideoCore initialized and cached")
+        st.session_state.reel_video = reel_video
+        st.session_state.reel_video_config_hash = config_hash
+        logger.info("✅ ReelVideoCore initialized and cached")
     else:
-        pixelle_video = st.session_state.pixelle_video
-        logger.debug("Reusing cached PixelleVideoCore instance")
+        reel_video = st.session_state.reel_video
+        logger.debug("Reusing cached ReelVideoCore instance")
     
-    return pixelle_video
+    return reel_video
 

@@ -20,7 +20,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 
-from api.dependencies import PixelleVideoDep
+from api.dependencies import ReelVideoDep
 from api.schemas.resources import (
     WorkflowInfo,
     WorkflowListResponse,
@@ -31,9 +31,9 @@ from api.schemas.resources import (
     TTSVoiceInfo,
     TTSVoiceListResponse,
 )
-from pixelle_video.tts_voices import EDGE_TTS_VOICES
-from pixelle_video.utils.os_util import list_resource_files, get_root_path, get_data_path
-from pixelle_video.utils.template_util import (
+from reel_video.tts_voices import EDGE_TTS_VOICES
+from reel_video.utils.os_util import list_resource_files, get_root_path, get_data_path
+from reel_video.utils.template_util import (
     get_all_templates_with_info,
     get_template_type,
 )
@@ -42,7 +42,7 @@ router = APIRouter(prefix="/resources", tags=["Resources"])
 
 
 @router.get("/workflows/tts", response_model=WorkflowListResponse)
-async def list_tts_workflows(pixelle_video: PixelleVideoDep):
+async def list_tts_workflows(reel_video: ReelVideoDep):
     """
     List available TTS workflows
     
@@ -66,7 +66,7 @@ async def list_tts_workflows(pixelle_video: PixelleVideoDep):
     """
     try:
         # Get all workflows from TTS service
-        all_workflows = pixelle_video.tts.list_workflows()
+        all_workflows = reel_video.tts.list_workflows()
         
         # Filter to TTS workflows only (filename starts with "tts_")
         tts_workflows = [
@@ -83,7 +83,7 @@ async def list_tts_workflows(pixelle_video: PixelleVideoDep):
 
 
 @router.get("/workflows/media", response_model=WorkflowListResponse)
-async def list_media_workflows(pixelle_video: PixelleVideoDep):
+async def list_media_workflows(reel_video: ReelVideoDep):
     """
     List available media workflows (both image and video)
     
@@ -115,7 +115,7 @@ async def list_media_workflows(pixelle_video: PixelleVideoDep):
     """
     try:
         # Get all workflows from media service (includes both image and video)
-        all_workflows = pixelle_video.media.list_workflows()
+        all_workflows = reel_video.media.list_workflows()
         
         media_workflows = [WorkflowInfo(**wf) for wf in all_workflows]
         
@@ -128,14 +128,14 @@ async def list_media_workflows(pixelle_video: PixelleVideoDep):
 
 # Keep old endpoint for backward compatibility
 @router.get("/workflows/image", response_model=WorkflowListResponse)
-async def list_image_workflows(pixelle_video: PixelleVideoDep):
+async def list_image_workflows(reel_video: ReelVideoDep):
     """
     List available image workflows (deprecated, use /workflows/media instead)
     
     This endpoint is kept for backward compatibility but will filter to image_ workflows only.
     """
     try:
-        all_workflows = pixelle_video.media.list_workflows()
+        all_workflows = reel_video.media.list_workflows()
         
         # Filter to image workflows only (filename starts with "image_")
         image_workflows = [
@@ -213,7 +213,7 @@ async def list_tts_voices() -> TTSVoiceListResponse:
     Falls back to the voice id if a label is missing.
     """
     import json
-    from pixelle_video.utils.os_util import get_root_path
+    from reel_video.utils.os_util import get_root_path
 
     label_map: dict = {}
     try:

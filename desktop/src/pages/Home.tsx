@@ -524,7 +524,7 @@ export function Home() {
             <div style={{ marginTop: 8 }}>
               <TemplatePreview
                 templateKey={frameTemplate ?? null}
-                title={form.getFieldValue("title") || "Pixelle Video"}
+                title={form.getFieldValue("title") || "Real Video"}
                 text={(form.getFieldValue("text") as string)?.slice(0, 60) || "示例分镜文案"}
                 value={templateParams as Record<string, unknown> | undefined}
                 onChange={(next) =>

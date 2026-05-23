@@ -4,7 +4,7 @@
 //
 // Usage:
 //   node scripts/gen-api-client.mjs              # boots `uv run python api/app.py`
-//   PIXELLE_SIDECAR_URL=http://127.0.0.1:8000 node scripts/gen-api-client.mjs
+//   REEL_SIDECAR_URL=http://127.0.0.1:8000 node scripts/gen-api-client.mjs
 //
 // Run after touching api/ routers, schemas, or pyproject endpoints.
 
@@ -72,7 +72,7 @@ async function runCodegen() {
 async function main() {
   await mkdir(dirname(schemaPath), { recursive: true });
 
-  const external = process.env.PIXELLE_SIDECAR_URL?.replace(/\/$/, "");
+  const external = process.env.REEL_SIDECAR_URL?.replace(/\/$/, "");
   if (external) {
     console.log(`Using external sidecar at ${external}`);
     await waitForHealth(`${external}/health`, 30_000);

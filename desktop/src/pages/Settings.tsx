@@ -305,7 +305,7 @@ function ComfyUISettings() {
           name="runninghub_api_key"
           label="RunningHub API Key"
           extra={
-            <a href="https://www.runninghub.cn/?utm_source=pixelle" target="_blank" rel="noreferrer">
+            <a href="https://www.runninghub.cn/?utm_source=reel" target="_blank" rel="noreferrer">
               注册并获取 API Key →
             </a>
           }

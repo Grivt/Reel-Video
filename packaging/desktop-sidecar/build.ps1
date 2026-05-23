@@ -1,4 +1,4 @@
-# Build script for the Pixelle Video desktop sidecar.
+# Build script for the Real Video desktop sidecar.
 #
 # Usage (from repo root or any directory):
 #   pwsh packaging/desktop-sidecar/build.ps1
@@ -9,8 +9,8 @@
 #   2. Installs sidecar requirements (incl. PyInstaller).
 #   3. Installs the Playwright Chromium browser into the venv (PyInstaller will bundle
 #      it via collect_all('playwright')).
-#   4. Runs `pyinstaller sidecar.spec` → `dist/pixelle-api/`.
-#   5. Copies the bundle into `desktop/src-tauri/binaries/pixelle-api/`.
+#   4. Runs `pyinstaller sidecar.spec` → `dist/reel-api/`.
+#   5. Copies the bundle into `desktop/src-tauri/binaries/reel-api/`.
 #
 # The Tauri side picks up the bundle via tauri.conf.json `bundle.resources` (NOT
 # externalBin — externalBin is for a single executable, but PyInstaller onedir
@@ -32,10 +32,10 @@ $BuildDir = Join-Path $SpecDir "build"
 $TauriBinDir = Join-Path $ProjectRoot "desktop\src-tauri\binaries"
 
 Write-Host ""
-Write-Host "🛠️  Pixelle sidecar PyInstaller build" -ForegroundColor Cyan
+Write-Host "🛠️  Reel sidecar PyInstaller build" -ForegroundColor Cyan
 Write-Host "    spec dir : $SpecDir"
 Write-Host "    project  : $ProjectRoot"
-Write-Host "    output   : $TauriBinDir\pixelle-api\"
+Write-Host "    output   : $TauriBinDir\reel-api\"
 Write-Host ""
 
 # 1. Build venv
@@ -50,7 +50,7 @@ if (-not (Test-Path $pyExe)) {
 }
 
 # 2. Install deps. Two steps:
-#    a) Install the project itself editable so `api` and `pixelle_video`
+#    a) Install the project itself editable so `api` and `reel_video`
 #       imports resolve (must run from project root so relative path is
 #       unambiguous across uv versions).
 #    b) Install the rest of the runtime libs from requirements.txt.
@@ -100,24 +100,24 @@ try {
     Pop-Location
 }
 
-if (-not (Test-Path (Join-Path $DistDir "pixelle-api\pixelle-api.exe"))) {
-    throw "PyInstaller did not produce pixelle-api.exe"
+if (-not (Test-Path (Join-Path $DistDir "reel-api\reel-api.exe"))) {
+    throw "PyInstaller did not produce reel-api.exe"
 }
 
 # 5. Copy bundle into Tauri's binaries/ for inclusion by tauri.conf.json resources
-Write-Host "→ Copying bundle to $TauriBinDir\pixelle-api\" -ForegroundColor Yellow
+Write-Host "→ Copying bundle to $TauriBinDir\reel-api\" -ForegroundColor Yellow
 if (-not (Test-Path $TauriBinDir)) {
     New-Item -ItemType Directory -Path $TauriBinDir -Force | Out-Null
 }
-$Target = Join-Path $TauriBinDir "pixelle-api"
+$Target = Join-Path $TauriBinDir "reel-api"
 if (Test-Path $Target) { Remove-Item -Recurse -Force $Target }
-Copy-Item -Recurse -Force (Join-Path $DistDir "pixelle-api") $Target
+Copy-Item -Recurse -Force (Join-Path $DistDir "reel-api") $Target
 
-$ExeSize = ((Get-Item (Join-Path $Target "pixelle-api.exe")).Length / 1MB).ToString("0.0")
+$ExeSize = ((Get-Item (Join-Path $Target "reel-api.exe")).Length / 1MB).ToString("0.0")
 $TotalMb = ((Get-ChildItem -Recurse $Target | Measure-Object -Property Length -Sum).Sum / 1MB).ToString("0.0")
 Write-Host ""
 Write-Host "✅ Sidecar bundle ready" -ForegroundColor Green
-Write-Host "    pixelle-api.exe : $ExeSize MB"
+Write-Host "    reel-api.exe : $ExeSize MB"
 Write-Host "    total bundle    : $TotalMb MB"
 Write-Host ""
 Write-Host "Next: cd desktop && pnpm tauri build"

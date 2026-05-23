@@ -1,20 +1,20 @@
 # API 概览
 
-Pixelle-Video 提供 Python SDK 和 HTTP REST API 两种方式。
+Reel-Video 提供 Python SDK 和 HTTP REST API 两种方式。
 
 ---
 
 ## Python SDK
 
-### PixelleVideoCore
+### ReelVideoCore
 
 主要服务类，提供视频生成功能。
 
 ```python
-from pixelle_video.service import PixelleVideoCore
+from reel_video.service import ReelVideoCore
 
-pixelle = PixelleVideoCore()
-await pixelle.initialize()
+reel = ReelVideoCore()
+await reel.initialize()
 ```
 
 ### generate_video()

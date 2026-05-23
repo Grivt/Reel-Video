@@ -53,7 +53,7 @@ function Shell() {
       >
         <div style={{ padding: "20px 24px" }}>
           <Title level={4} style={{ margin: 0 }}>
-            Pixelle Video
+            Real Video
           </Title>
           <Tag color="processing" style={{ marginTop: 6 }}>
             v{appVersion || "0.1.0"} · 桌面端
@@ -77,7 +77,7 @@ function Shell() {
         >
           <Space>
             <Title level={5} style={{ margin: 0 }}>
-              {NAV_ITEMS.find((n) => n.key === nav)?.label ?? "Pixelle Video"}
+              {NAV_ITEMS.find((n) => n.key === nav)?.label ?? "Real Video"}
             </Title>
             <Tag color="default">脚手架</Tag>
             {ffmpegPath ? (

@@ -23,8 +23,8 @@ from api.schemas.config import (
     LLMTestRequest,
     ConnectionTestResponse,
 )
-from pixelle_video.config.manager import ConfigManager
-from pixelle_video.llm_presets import LLM_PRESETS
+from reel_video.config.manager import ConfigManager
+from reel_video.llm_presets import LLM_PRESETS
 
 
 router = APIRouter(prefix="/config", tags=["Config"])

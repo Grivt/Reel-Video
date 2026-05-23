@@ -3,7 +3,7 @@ set -uo pipefail
 
 echo "[devcontainer] Running postCreate tasks..."
 
-cd /workspaces/Pixelle-Video
+cd /workspaces/Reel-Video
 
 # ============================================================================
 # System Dependencies Installation

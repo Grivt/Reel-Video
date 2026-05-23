@@ -9,8 +9,8 @@
 #   2. Installs sidecar requirements (no streamlit / fastmcp)
 #   3. Installs Playwright Chromium headless shell INSIDE the venv's package
 #      via PLAYWRIGHT_BROWSERS_PATH=0 (so PyInstaller's collect_all sweeps it in)
-#   4. Runs pyinstaller sidecar.spec → dist/pixelle-api/
-#   5. Copies the bundle into desktop/src-tauri/binaries/pixelle-api/
+#   4. Runs pyinstaller sidecar.spec → dist/reel-api/
+#   5. Copies the bundle into desktop/src-tauri/binaries/reel-api/
 #
 # After this, run `cd desktop && pnpm tauri build` to produce the .dmg on macOS
 # (or .deb / .AppImage on Linux).
@@ -25,10 +25,10 @@ BUILD_DIR="$SPEC_DIR/build"
 TAURI_BIN_DIR="$PROJECT_ROOT/desktop/src-tauri/binaries"
 
 echo ""
-echo "🛠️  Pixelle sidecar PyInstaller build"
+echo "🛠️  Reel sidecar PyInstaller build"
 echo "    spec dir : $SPEC_DIR"
 echo "    project  : $PROJECT_ROOT"
-echo "    output   : $TAURI_BIN_DIR/pixelle-api/"
+echo "    output   : $TAURI_BIN_DIR/reel-api/"
 echo ""
 
 # 1. Build venv (uv handles Python download automatically)
@@ -49,7 +49,7 @@ if [ ! -f "$PY_EXE" ]; then
 fi
 
 # 2. Install deps. Two steps:
-#    a) Install the project itself editable so `api` and `pixelle_video`
+#    a) Install the project itself editable so `api` and `reel_video`
 #       imports resolve (must run from project root so relative path is
 #       unambiguous across uv versions).
 #    b) Install the rest of the runtime libs from requirements.txt.
@@ -89,22 +89,22 @@ echo "→ Running PyInstaller"
 
 # Determine exe name per platform
 if [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    EXE_NAME="pixelle-api"
+    EXE_NAME="reel-api"
 else
-    EXE_NAME="pixelle-api.exe"
+    EXE_NAME="reel-api.exe"
 fi
 
-if [ ! -f "$DIST_DIR/pixelle-api/$EXE_NAME" ]; then
+if [ ! -f "$DIST_DIR/reel-api/$EXE_NAME" ]; then
     echo "PyInstaller did not produce $EXE_NAME" >&2
     exit 1
 fi
 
 # 5. Copy bundle into Tauri's binaries/
-echo "→ Copying bundle to $TAURI_BIN_DIR/pixelle-api/"
+echo "→ Copying bundle to $TAURI_BIN_DIR/reel-api/"
 mkdir -p "$TAURI_BIN_DIR"
-TARGET="$TAURI_BIN_DIR/pixelle-api"
+TARGET="$TAURI_BIN_DIR/reel-api"
 if [ -d "$TARGET" ]; then rm -rf "$TARGET"; fi
-cp -R "$DIST_DIR/pixelle-api" "$TARGET"
+cp -R "$DIST_DIR/reel-api" "$TARGET"
 
 
 EXE_MB=$(du -sm "$TARGET/$EXE_NAME" | cut -f1)

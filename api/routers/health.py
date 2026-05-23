@@ -28,7 +28,7 @@ class HealthResponse(BaseModel):
     """Health check response"""
     status: str = "healthy"
     version: str = "0.1.0"
-    service: str = "Pixelle-Video API"
+    service: str = "Reel-Video API"
 
 
 class CapabilitiesResponse(BaseModel):

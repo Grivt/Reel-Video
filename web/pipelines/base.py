@@ -29,12 +29,12 @@ class PipelineUI:
     icon: str = "🔌"
     description: str = ""
     
-    def render(self, pixelle_video: Any):
+    def render(self, reel_video: Any):
         """
         Render the full page content for this pipeline (below settings).
         
         Args:
-            pixelle_video: The initialized PixelleVideoCore instance.
+            reel_video: The initialized ReelVideoCore instance.
         """
         raise NotImplementedError
 

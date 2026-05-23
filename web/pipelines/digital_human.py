@@ -12,8 +12,8 @@ from web.components.content_input import render_version_info
 from web.components.digital_tts_config import render_style_config
 from web.utils.async_helpers import run_async
 from web.utils.streamlit_helpers import check_and_warn_selfhost_workflow
-from pixelle_video.config import config_manager
-from pixelle_video.utils.os_util import create_task_output_dir
+from reel_video.config import config_manager
+from reel_video.utils.os_util import create_task_output_dir
 
 class DigitalHumanPipelineUI(PipelineUI):
     """
@@ -31,7 +31,7 @@ class DigitalHumanPipelineUI(PipelineUI):
     def description(self):
         return tr("pipeline.digital_human.description")
 
-    def render(self, pixelle_video: Any):
+    def render(self, reel_video: Any):
         # Three-column layout
         left_col, middle_col, right_col = st.columns([1, 1, 1])
         
@@ -40,7 +40,7 @@ class DigitalHumanPipelineUI(PipelineUI):
         # ====================================================================
         with left_col:
             asset_params = self.render_digital_human_input()
-            style_params = render_style_config(pixelle_video)
+            style_params = render_style_config(reel_video)
             # bgm_params = render_bgm_section(key_prefix="asset_")
             render_version_info()
         
@@ -64,7 +64,7 @@ class DigitalHumanPipelineUI(PipelineUI):
                 "workflow_path": workflow_path
             }
             
-            self._render_output_preview(pixelle_video, video_params)
+            self._render_output_preview(reel_video, video_params)
 
     def render_digital_human_input(self) -> dict:
         """Render digital human character image upload section"""
@@ -281,7 +281,7 @@ class DigitalHumanPipelineUI(PipelineUI):
                     "mode": mode
                     }
                     
-    def _render_output_preview(self, pixelle_video: Any, video_params: dict):
+    def _render_output_preview(self, reel_video: Any, video_params: dict):
         """Render output preview section"""
         with st.container(border=True):
             st.markdown(f"**{tr('section.video_generation')}**")
@@ -370,7 +370,7 @@ class DigitalHumanPipelineUI(PipelineUI):
                     # Define async generation function
                     async def generate_digital_human_video():
                         task_dir, task_id = create_task_output_dir()
-                        kit = await pixelle_video._get_or_create_comfykit()
+                        kit = await reel_video._get_or_create_comfykit()
                         workflow_path = video_params["workflow_path"]
 
                         import json
@@ -404,7 +404,7 @@ class DigitalHumanPipelineUI(PipelineUI):
                                 if ref_audio:
                                     tts_kwargs["ref_audio"] = ref_audio
 
-                            await pixelle_video.tts(**tts_kwargs)
+                            await reel_video.tts(**tts_kwargs)
                             progress_bar.progress(65)
                             status_text.text(tr("progress.concatenating"))
 
@@ -466,7 +466,7 @@ class DigitalHumanPipelineUI(PipelineUI):
                                 generated_text = goods_text
 
                                 status_text.text(tr("progress.step_image"))
-                                kit = await pixelle_video._get_or_create_comfykit()
+                                kit = await reel_video._get_or_create_comfykit()
                                 workflow_config = json.load(open(workflow_path, 'r', encoding='utf8'))
                                 if workflow_config.get("source") == "runninghub" and "workflow_id" in workflow_config:
                                     workflow_input = workflow_config["workflow_id"]
@@ -498,7 +498,7 @@ class DigitalHumanPipelineUI(PipelineUI):
                                     if ref_audio:
                                         tts_kwargs["ref_audio"] = ref_audio
 
-                                await pixelle_video.tts(**tts_kwargs)
+                                await reel_video.tts(**tts_kwargs)
                                 progress_bar.progress(65)
                                 status_text.text(tr("progress.concatenating"))
 
@@ -545,7 +545,7 @@ class DigitalHumanPipelineUI(PipelineUI):
                                 workflow_params = {"firstimage": character_assets[0], "secondimage": goods_assets[0], "goodstype": goods_title}
                                 
                                 status_text.text(tr("progress.step_image"))
-                                kit = await pixelle_video._get_or_create_comfykit()
+                                kit = await reel_video._get_or_create_comfykit()
                                 workflow_config = json.load(open(workflow_path, 'r', encoding='utf8'))
                                 if workflow_config.get("source") == "runninghub" and "workflow_id" in workflow_config:
                                     workflow_input = workflow_config["workflow_id"]
@@ -579,7 +579,7 @@ class DigitalHumanPipelineUI(PipelineUI):
                                     if ref_audio:
                                         tts_kwargs["ref_audio"] = ref_audio
 
-                                await pixelle_video.tts(**tts_kwargs)
+                                await reel_video.tts(**tts_kwargs)
                                 progress_bar.progress(65)
                                 status_text.text(tr("progress.concatenating"))
 

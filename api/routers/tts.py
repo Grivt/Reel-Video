@@ -17,9 +17,9 @@ TTS (Text-to-Speech) endpoints
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 
-from api.dependencies import PixelleVideoDep
+from api.dependencies import ReelVideoDep
 from api.schemas.tts import TTSSynthesizeRequest, TTSSynthesizeResponse
-from pixelle_video.utils.tts_util import get_audio_duration
+from reel_video.utils.tts_util import get_audio_duration
 
 router = APIRouter(prefix="/tts", tags=["Basic Services"])
 
@@ -27,7 +27,7 @@ router = APIRouter(prefix="/tts", tags=["Basic Services"])
 @router.post("/synthesize", response_model=TTSSynthesizeResponse)
 async def tts_synthesize(
     request: TTSSynthesizeRequest,
-    pixelle_video: PixelleVideoDep
+    reel_video: ReelVideoDep
 ):
     """
     Text-to-Speech synthesis endpoint
@@ -44,7 +44,7 @@ async def tts_synthesize(
     Examples:
     ```json
     {
-        "text": "Hello, welcome to Pixelle-Video!",
+        "text": "Hello, welcome to Reel-Video!",
         "workflow": "runninghub/tts_edge.json"
     }
     ```
@@ -85,7 +85,7 @@ async def tts_synthesize(
             tts_params["voice"] = request.voice_id
         
         # Call TTS service
-        audio_path = await pixelle_video.tts(**tts_params)
+        audio_path = await reel_video.tts(**tts_params)
         
         # Get audio duration
         duration = get_audio_duration(audio_path)

@@ -29,8 +29,8 @@ from web.pipelines.base import PipelineUI, register_pipeline_ui
 from web.components.content_input import render_bgm_section, render_version_info
 from web.utils.async_helpers import run_async
 from web.utils.streamlit_helpers import check_and_warn_selfhost_workflow
-from pixelle_video.config import config_manager
-from pixelle_video.models.progress import ProgressEvent
+from reel_video.config import config_manager
+from reel_video.models.progress import ProgressEvent
 
 
 class AssetBasedPipelineUI(PipelineUI):
@@ -49,7 +49,7 @@ class AssetBasedPipelineUI(PipelineUI):
     def description(self):
         return tr("pipeline.custom_media.description")
     
-    def render(self, pixelle_video: Any):
+    def render(self, reel_video: Any):
         # Three-column layout
         left_col, middle_col, right_col = st.columns([1, 1, 1])
         
@@ -65,7 +65,7 @@ class AssetBasedPipelineUI(PipelineUI):
         # Middle Column: Video Configuration
         # ====================================================================
         with middle_col:
-            config_params = self._render_video_config(pixelle_video)
+            config_params = self._render_video_config(reel_video)
         
         # ====================================================================
         # Right Column: Output Preview
@@ -79,7 +79,7 @@ class AssetBasedPipelineUI(PipelineUI):
                 **config_params
             }
             
-            self._render_output_preview(pixelle_video, video_params)
+            self._render_output_preview(reel_video, video_params)
     
     def _render_asset_input(self) -> dict:
         """Render asset upload section"""
@@ -158,7 +158,7 @@ class AssetBasedPipelineUI(PipelineUI):
             "intent": intent if intent else None
         }
     
-    def _render_video_config(self, pixelle_video: Any) -> dict:
+    def _render_video_config(self, reel_video: Any) -> dict:
         """Render video configuration section"""
         # Duration configuration
         with st.container(border=True):
@@ -229,7 +229,7 @@ class AssetBasedPipelineUI(PipelineUI):
             st.markdown(f"**{tr('section.tts')}**")
             
             # Import voice configuration
-            from pixelle_video.tts_voices import EDGE_TTS_VOICES, get_voice_display_name
+            from reel_video.tts_voices import EDGE_TTS_VOICES, get_voice_display_name
             
             # Get saved voice from config
             comfyui_config = config_manager.get_comfyui_config()
@@ -284,7 +284,7 @@ class AssetBasedPipelineUI(PipelineUI):
             "tts_speed": tts_speed
         }
     
-    def _render_output_preview(self, pixelle_video: Any, video_params: dict):
+    def _render_output_preview(self, reel_video: Any, video_params: dict):
         """Render output preview section"""
         with st.container(border=True):
             st.markdown(f"**{tr('section.video_generation')}**")
@@ -324,10 +324,10 @@ class AssetBasedPipelineUI(PipelineUI):
                 
                 try:
                     # Import pipeline
-                    from pixelle_video.pipelines.asset_based import AssetBasedPipeline
+                    from reel_video.pipelines.asset_based import AssetBasedPipeline
                     
                     # Create pipeline
-                    pipeline = AssetBasedPipeline(pixelle_video)
+                    pipeline = AssetBasedPipeline(reel_video)
                     
                     # Progress callback
                     def update_progress(event: ProgressEvent):

@@ -110,8 +110,8 @@ fn wait_for_port(port: u16, timeout: Duration) -> Result<(), String> {
 /// In a signed install the resource dir is read-only, so the sidecar's cwd
 /// (which determines where `output/`, `temp/`, `.tasks.json` etc. land) needs
 /// to be a writable location. Uses Tauri's `app_data_dir()` —
-/// Windows: `%APPDATA%\PixelleVideo\`, macOS: `~/Library/Application Support/PixelleVideo/`,
-/// Linux: `~/.local/share/PixelleVideo/`.
+/// Windows: `%APPDATA%\ReelVideo\`, macOS: `~/Library/Application Support/ReelVideo/`,
+/// Linux: `~/.local/share/ReelVideo/`.
 fn per_user_data_dir(app: &AppHandle) -> Option<PathBuf> {
     let dir = app.path().app_data_dir().ok()?;
     std::fs::create_dir_all(&dir).ok()?;
@@ -121,7 +121,7 @@ fn per_user_data_dir(app: &AppHandle) -> Option<PathBuf> {
 fn project_root_for_dev() -> PathBuf {
     // `CARGO_MANIFEST_DIR` is the absolute path to src-tauri/ at compile time —
     // far more reliable than `current_dir()` (which differs between `tauri dev`
-    // and a launched binary).  Project root = src-tauri/.. (=desktop) /.. (=Pixelle-Video).
+    // and a launched binary).  Project root = src-tauri/.. (=desktop) /.. (=Reel-Video).
     let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     manifest
         .parent()
@@ -229,7 +229,7 @@ fn inject_ffmpeg_env(cmd: &mut Command, ffmpeg: &Path) {
     // moviepy / imageio look this up first when present.
     cmd.env("IMAGEIO_FFMPEG_EXE", ffmpeg);
     // Convenience for any Python code that wants the canonical path.
-    cmd.env("PIXELLE_FFMPEG_EXE", ffmpeg);
+    cmd.env("REEL_FFMPEG_EXE", ffmpeg);
 }
 
 #[cfg(windows)]
@@ -278,12 +278,12 @@ fn spawn_sidecar(port: u16, app: &AppHandle) -> Result<(Child, Option<PathBuf>),
             .resource_dir()
             .map_err(|e| format!("resource_dir unavailable: {e}"))?;
         let exe_name = if cfg!(windows) {
-            "pixelle-api.exe"
+            "reel-api.exe"
         } else {
-            "pixelle-api"
+            "reel-api"
         };
-        // PyInstaller onedir layout: binaries/pixelle-api/<exe> with _internal/ alongside.
-        let bundle_dir = resource_dir.join("binaries").join("pixelle-api");
+        // PyInstaller onedir layout: binaries/reel-api/<exe> with _internal/ alongside.
+        let bundle_dir = resource_dir.join("binaries").join("reel-api");
         let exe = bundle_dir.join(exe_name);
         if !exe.exists() {
             return Err(format!("sidecar binary not found at {:?}", exe));
@@ -295,12 +295,12 @@ fn spawn_sidecar(port: u16, app: &AppHandle) -> Result<(Child, Option<PathBuf>),
         let mut cmd = Command::new(&exe);
         cmd.args(["--host", "127.0.0.1", "--port", &port_str])
             // Read-only project resources bundled with the app.
-            .env("PIXELLE_VIDEO_ROOT", &resource_dir)
+            .env("REEL_VIDEO_ROOT", &resource_dir)
             // Writable data root. sidecar_entry.py picks this up and
             // os.chdir()'s into it before importing the app, so all the
             // pipeline code that uses `Path("output/...")` (relative)
             // lands in the same dir the file server reads from.
-            .env("PIXELLE_DATA_DIR", &data_dir)
+            .env("REEL_DATA_DIR", &data_dir)
             // Tell Playwright to find browsers inside its own package dir
             // (.local-browsers/) — they were installed there at build time
             // via PLAYWRIGHT_BROWSERS_PATH=0. Without this var, Playwright
@@ -329,7 +329,7 @@ pub fn launch(app: AppHandle, state: Arc<SidecarState>) {
 
     tauri::async_runtime::spawn(async move {
         // External override (e.g. developer kept a `uv run api/app.py` running).
-        if let Ok(url) = std::env::var("PIXELLE_SIDECAR_URL") {
+        if let Ok(url) = std::env::var("REEL_SIDECAR_URL") {
             let url = url.trim_end_matches('/').to_string();
             if let Some(port) = parse_port_from_url(&url) {
                 if wait_for_port(port, Duration::from_secs(30)).is_err() {

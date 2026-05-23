@@ -49,7 +49,7 @@ class TTSSynthesizeRequest(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "text": "Hello, welcome to Pixelle-Video!",
+                "text": "Hello, welcome to Reel-Video!",
                 "workflow": "runninghub/tts_edge.json",
                 "ref_audio": None
             }
