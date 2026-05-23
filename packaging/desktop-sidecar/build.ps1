@@ -16,7 +16,13 @@
 # externalBin — externalBin is for a single executable, but PyInstaller onedir
 # is a whole directory). See sidecar.rs for the resolved path at runtime.
 
-$ErrorActionPreference = "Stop"
+# NOTE on error handling for PowerShell 5.1:
+#   Don't use `$ErrorActionPreference = "Stop"` + `2>&1` redirects on native
+#   executables like uv/playwright/pyinstaller. PS5.1 wraps every native-cmd
+#   stderr LINE as an ErrorRecord (`NativeCommandError`), which combined with
+#   Stop mode aborts the script on harmless informational logs (e.g. uv's
+#   "Using Python 3.11.x environment at: ..."). Instead: leave stderr alone,
+#   and check `$LASTEXITCODE` after each native call.
 
 $SpecDir = Split-Path -Parent $PSCommandPath
 $ProjectRoot = Resolve-Path (Join-Path $SpecDir "..\..")
@@ -36,6 +42,7 @@ Write-Host ""
 if (-not (Test-Path $VenvDir)) {
     Write-Host "→ Creating sidecar build venv at .venv" -ForegroundColor Yellow
     & uv venv $VenvDir --python 3.11
+    if ($LASTEXITCODE -ne 0) { throw "uv venv failed (exit $LASTEXITCODE)" }
 }
 $pyExe = Join-Path $VenvDir "Scripts\python.exe"
 if (-not (Test-Path $pyExe)) {
@@ -51,10 +58,12 @@ Write-Host "→ Installing project (editable) + sidecar requirements" -Foregroun
 Push-Location $ProjectRoot
 try {
     & uv pip install --python $pyExe -e .
+    if ($LASTEXITCODE -ne 0) { throw "uv pip install -e . failed (exit $LASTEXITCODE)" }
 } finally {
     Pop-Location
 }
 & uv pip install --python $pyExe --requirement (Join-Path $SpecDir "requirements.txt")
+if ($LASTEXITCODE -ne 0) { throw "uv pip install requirements failed (exit $LASTEXITCODE)" }
 
 # 3. Install Playwright browsers INSIDE the venv's playwright package, not in
 #    the OS user cache (%LOCALAPPDATA%\ms-playwright). Without this, PyInstaller's
@@ -103,31 +112,6 @@ if (-not (Test-Path $TauriBinDir)) {
 $Target = Join-Path $TauriBinDir "pixelle-api"
 if (Test-Path $Target) { Remove-Item -Recurse -Force $Target }
 Copy-Item -Recurse -Force (Join-Path $DistDir "pixelle-api") $Target
-
-# 6. Ensure a static ffprobe.exe is co-bundled. imageio_ffmpeg ships ffmpeg
-#    but not ffprobe; ffmpeg-python's subprocess.run("ffprobe") needs it on
-#    PATH or via FFPROBE_BINARY, so we ship it as a sibling binary.
-$FfprobeExe = Join-Path $TauriBinDir "ffprobe.exe"
-if (-not (Test-Path $FfprobeExe)) {
-    Write-Host "→ Downloading static ffprobe.exe (Windows, ~30MB)" -ForegroundColor Yellow
-    $TmpZip = Join-Path $env:TEMP "pixelle-ffmpeg-essentials.zip"
-    if (-not (Test-Path $TmpZip)) {
-        Invoke-WebRequest `
-            -Uri "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" `
-            -OutFile $TmpZip `
-            -UseBasicParsing
-    }
-    $TmpExtract = Join-Path $env:TEMP "pixelle-ffmpeg-extract"
-    if (Test-Path $TmpExtract) { Remove-Item -Recurse -Force $TmpExtract }
-    Expand-Archive -Path $TmpZip -DestinationPath $TmpExtract -Force
-    $Found = Get-ChildItem -Recurse -Path $TmpExtract -Filter "ffprobe.exe" | Select-Object -First 1
-    if (-not $Found) { throw "ffprobe.exe not found in Gyan release zip" }
-    Copy-Item -Path $Found.FullName -Destination $FfprobeExe -Force
-    Remove-Item -Recurse -Force $TmpExtract
-    Write-Host "    ffprobe.exe → $FfprobeExe ($([math]::Round((Get-Item $FfprobeExe).Length / 1MB, 1)) MB)" -ForegroundColor Green
-} else {
-    Write-Host "→ Reusing cached ffprobe.exe at $FfprobeExe" -ForegroundColor Green
-}
 
 $ExeSize = ((Get-Item (Join-Path $Target "pixelle-api.exe")).Length / 1MB).ToString("0.0")
 $TotalMb = ((Get-ChildItem -Recurse $Target | Measure-Object -Property Length -Sum).Sum / 1MB).ToString("0.0")

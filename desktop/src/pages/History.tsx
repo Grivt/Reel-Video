@@ -21,7 +21,9 @@ import {
   EyeOutlined,
   DeleteOutlined,
   ExclamationCircleFilled,
+  FolderOpenOutlined,
 } from "@ant-design/icons";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import type { ColumnsType } from "antd/es/table";
 import { api, unwrap } from "../api/client";
 import type { components } from "../api/generated/schema";
@@ -312,12 +314,42 @@ function TaskDetailModal({
   baseUrl: string | null;
   onClose: () => void;
 }) {
+  const { message } = AntdApp.useApp();
+
+  // Streamable URL — needed by the <video> tag (Tauri WebView can't play
+  // raw file:// videos inside a sandboxed page on every platform).
   const videoUrl = useMemo(() => {
     if (!task?.result || typeof task.result !== "object") return null;
     const u = (task.result as { video_url?: unknown }).video_url;
     if (typeof u !== "string") return null;
     return absoluteVideoUrl(u, baseUrl);
   }, [task, baseUrl]);
+
+  // Local absolute path on disk — what the user actually wants to see / open
+  // in Finder / Explorer. Derived from the result's output_dir field (the
+  // sidecar populates this in api/routers/video.py:execute_video_generation).
+  const localVideoPath = useMemo(() => {
+    if (!task?.result || typeof task.result !== "object") return null;
+    const result = task.result as { output_dir?: unknown; video_path?: unknown };
+    if (typeof result.video_path === "string" && result.video_path.length > 0) {
+      return result.video_path;
+    }
+    if (typeof result.output_dir === "string" && result.output_dir.length > 0) {
+      // Cross-platform join: pick separator from the existing path.
+      const sep = result.output_dir.includes("\\") ? "\\" : "/";
+      return `${result.output_dir}${sep}final.mp4`;
+    }
+    return null;
+  }, [task]);
+
+  const openInFileManager = async () => {
+    if (!localVideoPath) return;
+    try {
+      await revealItemInDir(localVideoPath);
+    } catch (e) {
+      message.error(`无法在文件管理器中显示：${String(e)}`);
+    }
+  };
 
   return (
     <Modal
@@ -345,10 +377,40 @@ function TaskDetailModal({
               <Typography.Title level={5} style={{ marginTop: 0 }}>
                 <VideoCameraOutlined /> 视频
               </Typography.Title>
-              <video src={videoUrl} controls style={{ width: "100%", borderRadius: 8 }} />
-              <Typography.Paragraph copyable style={{ fontSize: 12, marginTop: 8 }} type="secondary">
-                {videoUrl}
-              </Typography.Paragraph>
+              <video
+                src={videoUrl}
+                controls
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: 360,
+                  width: "auto",
+                  display: "block",
+                  margin: "0 auto",
+                  borderRadius: 8,
+                  background: "#000",
+                }}
+              />
+
+              {localVideoPath && (
+                <div style={{ marginTop: 12 }}>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    文件位置：
+                  </Typography.Text>
+                  <Typography.Paragraph
+                    copyable={{ text: localVideoPath, tooltips: ["复制路径", "已复制"] }}
+                    style={{ fontSize: 12, marginTop: 4, marginBottom: 8, wordBreak: "break-all" }}
+                  >
+                    <Typography.Text code>{localVideoPath}</Typography.Text>
+                  </Typography.Paragraph>
+                  <Button
+                    size="small"
+                    icon={<FolderOpenOutlined />}
+                    onClick={openInFileManager}
+                  >
+                    在文件管理器中显示
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 

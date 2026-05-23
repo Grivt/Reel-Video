@@ -18,15 +18,18 @@ import {
   Tag,
   Divider,
   Segmented,
+  App as AntdApp,
 } from "antd";
 import {
   PlayCircleOutlined,
   ReloadOutlined,
   VideoCameraOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import { api, unwrap, ApiError } from "../api/client";
 import { useResources, type TemplateType } from "../hooks/useResources";
 import { useTaskProgress } from "../hooks/useTaskProgress";
+import { useDependencies } from "../hooks/useDependencies";
 import { useSidecar } from "../store/sidecar";
 import { TemplatePreview } from "../components/TemplatePreview";
 import { TTSPreview } from "../components/TTSPreview";
@@ -77,6 +80,8 @@ export function Home() {
   const baseUrl = useSidecar((s) => s.base_url);
   const resources = useResources();
   const progress = useTaskProgress({ taskId });
+  const deps = useDependencies();
+  const { modal } = AntdApp.useApp();
 
   const mode = Form.useWatch("mode", form);
   const ttsMode = Form.useWatch("tts_inference_mode", form);
@@ -204,7 +209,65 @@ export function Home() {
     [resources.bgmFiles]
   );
 
+  const showMissingDepsModal = (
+    missing: string[],
+    platform: "windows" | "macos" | "linux"
+  ) => {
+    const installCmd =
+      platform === "macos"
+        ? "brew install ffmpeg"
+        : platform === "linux"
+        ? "sudo apt-get install ffmpeg"
+        : "winget install Gyan.FFmpeg";
+    const downloadUrl =
+      platform === "windows"
+        ? "https://www.gyan.dev/ffmpeg/builds/"
+        : platform === "macos"
+        ? "https://evermeet.cx/ffmpeg/"
+        : "https://ffmpeg.org/download.html";
+    modal.error({
+      title: `缺少必要依赖：${missing.join(" / ")}`,
+      width: 540,
+      content: (
+        <div>
+          <Paragraph style={{ marginBottom: 8 }}>
+            生成视频前需要安装 <Text code>ffmpeg</Text>（含 <Text code>ffprobe</Text>）才能合成最终视频与读取媒体元信息。
+          </Paragraph>
+          <Paragraph type="secondary" style={{ marginBottom: 4 }}>
+            推荐命令（终端 / PowerShell 执行）：
+          </Paragraph>
+          <Paragraph copyable={{ text: installCmd }}>
+            <Text code style={{ fontSize: 13 }}>{installCmd}</Text>
+          </Paragraph>
+          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+            或手动下载预编译包：
+            <br />
+            <a href={downloadUrl} target="_blank" rel="noreferrer">{downloadUrl}</a>
+          </Paragraph>
+          <Alert
+            type="info"
+            showIcon
+            message="安装完成后，重新打开本应用即可生效。"
+            style={{ marginTop: 12 }}
+          />
+        </div>
+      ),
+      okText: "我知道了",
+    });
+  };
+
   const onSubmit = async (values: FormShape) => {
+    // Pre-flight: re-probe dependencies so the user gets an immediate error
+    // instead of waiting through TTS + image gen only to crash at compose.
+    try {
+      await deps.refresh();
+    } catch {}
+    const fresh = deps.data;
+    if (fresh && !fresh.all_ok) {
+      showMissingDepsModal(fresh.missing, fresh.platform);
+      return;
+    }
+
     setSubmitting(true);
     setVideoUrl(null);
     try {
@@ -485,6 +548,40 @@ export function Home() {
                   <Button size="small" icon={<ReloadOutlined />} onClick={resources.reload}>
                     重试
                   </Button>
+                }
+                style={{ marginBottom: 12 }}
+              />
+            )}
+
+            {deps.data && !deps.data.all_ok && (
+              <Alert
+                type="error"
+                showIcon
+                icon={<WarningOutlined />}
+                message={`缺少依赖：${deps.data.missing.join(" / ")}`}
+                description={
+                  <>生成前需要先安装 ffmpeg。点下方按钮查看你这台机器的安装指引。</>
+                }
+                action={
+                  <Space direction="vertical" size="small">
+                    <Button
+                      size="small"
+                      type="primary"
+                      onClick={() =>
+                        showMissingDepsModal(deps.data!.missing, deps.data!.platform)
+                      }
+                    >
+                      安装指引
+                    </Button>
+                    <Button
+                      size="small"
+                      icon={<ReloadOutlined />}
+                      onClick={() => void deps.refresh()}
+                      loading={deps.loading}
+                    >
+                      重新检查
+                    </Button>
+                  </Space>
                 }
                 style={{ marginBottom: 12 }}
               />

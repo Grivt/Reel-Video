@@ -39,7 +39,6 @@
     ],
     "resources": {
       "binaries/pixelle-api": "binaries/pixelle-api",
-      "binaries/ffprobe*": "binaries",
       "../../templates": "templates",
       "../../workflows": "workflows",
       "../../bgm": "bgm",

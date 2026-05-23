@@ -62,39 +62,6 @@ def _bootstrap_paths() -> None:
             print(f"warn: could not chdir to PIXELLE_DATA_DIR={data_dir}: {e}",
                   file=sys.stderr)
 
-    # --- ffmpeg / ffprobe discovery -----------------------------------------
-    # ffmpeg is shipped as part of `imageio_ffmpeg` (PyInstaller collects its
-    # static binary, ~80MB, into _internal/imageio_ffmpeg/binaries/). Surface it
-    # to subprocess clients like `ffmpeg-python` by prepending its dir to PATH
-    # and setting IMAGEIO_FFMPEG_EXE for moviepy.
-    try:
-        import imageio_ffmpeg  # type: ignore
-        ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
-        if ffmpeg_exe and os.path.exists(ffmpeg_exe):
-            ffmpeg_dir = os.path.dirname(ffmpeg_exe)
-            os.environ["PATH"] = ffmpeg_dir + os.pathsep + os.environ.get("PATH", "")
-            os.environ.setdefault("IMAGEIO_FFMPEG_EXE", ffmpeg_exe)
-    except Exception as e:
-        print(f"warn: could not resolve imageio_ffmpeg's ffmpeg: {e}", file=sys.stderr)
-
-    # ffprobe is bundled separately under `<resource_root>/binaries/` by the
-    # Tauri shell (build.ps1 / build.sh downloads a static binary at build time).
-    # Prepend its dir to PATH so ffmpeg-python's `subprocess.run("ffprobe")`
-    # finds it, and also set FFPROBE_BINARY for libraries that honour it.
-    video_root = os.environ.get("PIXELLE_VIDEO_ROOT")
-    if video_root:
-        ext = ".exe" if sys.platform.startswith("win") else ""
-        # Try Tauri resource_dir/binaries/ffprobe(.exe) first, then a fallback
-        # location for dev mode where ffprobe might sit alongside the project.
-        for ffprobe_candidate in (
-            os.path.join(video_root, "binaries", f"ffprobe{ext}"),
-            os.path.join(video_root, "ffprobe{ext}".format(ext=ext)),
-        ):
-            if os.path.isfile(ffprobe_candidate):
-                ffprobe_dir = os.path.dirname(ffprobe_candidate)
-                os.environ["PATH"] = ffprobe_dir + os.pathsep + os.environ.get("PATH", "")
-                os.environ.setdefault("FFPROBE_BINARY", ffprobe_candidate)
-                break
 
 
 _bootstrap_paths()

@@ -106,33 +106,6 @@ TARGET="$TAURI_BIN_DIR/pixelle-api"
 if [ -d "$TARGET" ]; then rm -rf "$TARGET"; fi
 cp -R "$DIST_DIR/pixelle-api" "$TARGET"
 
-# 6. Ensure a static ffprobe is co-bundled. imageio_ffmpeg ships ffmpeg
-#    but not ffprobe; ffmpeg-python's subprocess.run("ffprobe") needs it on
-#    PATH or via FFPROBE_BINARY, so we ship it as a sibling binary.
-FFPROBE_BIN="$TAURI_BIN_DIR/ffprobe"
-if [ ! -f "$FFPROBE_BIN" ]; then
-    echo "→ Downloading static ffprobe (macOS, ~25MB)"
-    TMP_ZIP="/tmp/pixelle-ffprobe-mac.zip"
-    if [ ! -f "$TMP_ZIP" ]; then
-        curl -L --max-time 300 -o "$TMP_ZIP" \
-            "https://evermeet.cx/ffmpeg/getrelease/ffprobe/zip"
-    fi
-    TMP_EXTRACT="/tmp/pixelle-ffprobe-extract"
-    rm -rf "$TMP_EXTRACT" && mkdir -p "$TMP_EXTRACT"
-    (cd "$TMP_EXTRACT" && unzip -o "$TMP_ZIP" > /dev/null)
-    FOUND="$(find "$TMP_EXTRACT" -name ffprobe -type f | head -1)"
-    if [ -z "$FOUND" ]; then
-        echo "ffprobe not found in evermeet release zip" >&2
-        exit 1
-    fi
-    cp "$FOUND" "$FFPROBE_BIN"
-    chmod +x "$FFPROBE_BIN"
-    rm -rf "$TMP_EXTRACT"
-    FFPROBE_MB=$(du -sm "$FFPROBE_BIN" | cut -f1)
-    echo "    ffprobe → $FFPROBE_BIN (${FFPROBE_MB} MB)"
-else
-    echo "→ Reusing cached ffprobe at $FFPROBE_BIN"
-fi
 
 EXE_MB=$(du -sm "$TARGET/$EXE_NAME" | cut -f1)
 TOTAL_MB=$(du -sm "$TARGET" | cut -f1)

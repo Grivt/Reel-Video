@@ -14,6 +14,10 @@
 Health check and system info endpoints
 """
 
+import shutil
+import sys
+from typing import Optional
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -33,11 +37,31 @@ class CapabilitiesResponse(BaseModel):
     capabilities: dict
 
 
+class DependencyStatus(BaseModel):
+    """Whether a single external CLI dependency is available on the system."""
+    name: str
+    available: bool
+    path: Optional[str] = None
+
+
+class DependenciesResponse(BaseModel):
+    """
+    Aggregated dependency probe so the desktop client can pre-flight before
+    starting a video generation pipeline (which would otherwise fail mid-stream
+    with a stack trace several minutes in).
+    """
+    success: bool = True
+    platform: str
+    all_ok: bool
+    missing: list[str]
+    dependencies: list[DependencyStatus]
+
+
 @router.get("/health", response_model=HealthResponse)
 async def health_check():
     """
     Health check endpoint
-    
+
     Returns service status and version information.
     """
     return HealthResponse()
@@ -47,8 +71,42 @@ async def health_check():
 async def get_version():
     """
     Get API version
-    
+
     Returns version information.
     """
     return HealthResponse()
+
+
+@router.get("/health/dependencies", response_model=DependenciesResponse)
+async def check_dependencies():
+    """
+    Probe required external CLI dependencies (ffmpeg / ffprobe).
+
+    Used by the desktop client to fail fast at "Generate" click time rather
+    than letting the user wait through TTS + image gen only to crash at the
+    final compose step.
+    """
+    required = ("ffmpeg", "ffprobe")
+    statuses: list[DependencyStatus] = []
+    missing: list[str] = []
+    for name in required:
+        path = shutil.which(name)
+        ok = path is not None
+        statuses.append(DependencyStatus(name=name, available=ok, path=path))
+        if not ok:
+            missing.append(name)
+
+    if sys.platform.startswith("win"):
+        plat = "windows"
+    elif sys.platform == "darwin":
+        plat = "macos"
+    else:
+        plat = "linux"
+
+    return DependenciesResponse(
+        platform=plat,
+        all_ok=not missing,
+        missing=missing,
+        dependencies=statuses,
+    )
 
