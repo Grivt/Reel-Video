@@ -208,16 +208,16 @@ async def list_tts_voices() -> TTSVoiceListResponse:
     """
     List voices available for local Edge TTS inference.
 
-    `display_name` is resolved from the project's own i18n bundle (web/i18n/locales/zh_CN.json)
-    so the desktop client and the Streamlit web app stay consistent.
-    Falls back to the voice id if a label is missing.
+    `display_name` is resolved from the project's own i18n bundle
+    (resources/i18n/locales/zh_CN.json). Falls back to the voice id if a
+    label is missing.
     """
     import json
     from reel_video.utils.os_util import get_root_path
 
     label_map: dict = {}
     try:
-        i18n_path = Path(get_root_path("web/i18n/locales/zh_CN.json"))
+        i18n_path = Path(get_root_path("resources/i18n/locales/zh_CN.json"))
         if i18n_path.exists():
             with open(i18n_path, "r", encoding="utf-8") as f:
                 raw = json.load(f) or {}

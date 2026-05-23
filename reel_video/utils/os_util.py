@@ -90,12 +90,12 @@ def get_writable_root_path() -> str:
         1. REEL_DATA_DIR  — explicit per-user writable dir (set by the
            Tauri desktop shell to %APPDATA%\\com.reel.video\\ etc.).
         2. REEL_VIDEO_ROOT — when no separate data dir is configured
-           (dev mode, Streamlit run), fall back to the project root.
+           (dev mode), fall back to the project root.
         3. Current working directory — last resort.
 
     Important: this is DIFFERENT from `get_reel_video_root_path()`, which
     always points at read-only project resources (templates/, workflows/,
-    bgm/, web/i18n/). Mixing the two writes pipeline artifacts under the
+    bgm/, resources/i18n/). Mixing the two writes pipeline artifacts under the
     install dir, which fails on signed installs and silently swallows the
     PermissionError — leaving generated images orphaned and frame composition
     falling back to the template's "Frame Image" alt text.

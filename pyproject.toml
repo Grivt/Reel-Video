@@ -9,7 +9,6 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "Apache-2.0"}
 dependencies = [
-    "fastmcp>=2.0.0",
     "pydantic>=2.0.0",
     "loguru>=0.7.0",
     "pyyaml>=6.0.0",
@@ -18,7 +17,6 @@ dependencies = [
     "ffmpeg-python>=0.2.0",
     "httpx>=0.28.1",
     "pillow>=10.0.0,<12",
-    "streamlit>=1.40.0",
     "openai>=2.6.0",
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",

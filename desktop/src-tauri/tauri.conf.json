@@ -42,8 +42,7 @@
       "../../templates": "templates",
       "../../workflows": "workflows",
       "../../bgm": "bgm",
-      "../../resources": "resources",
-      "../../web/i18n/locales": "web/i18n/locales"
+      "../../resources": "resources"
     },
     "category": "Productivity",
     "shortDescription": "AI 全自动短视频生成桌面端",
