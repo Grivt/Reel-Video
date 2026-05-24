@@ -18,14 +18,24 @@
 
 Reel-Video is a cross-platform desktop app that turns short-video creation into a single sentence.
 
+The original project required setting up Python and a dependency environment yourself — a high bar for non-developers. Reel-Video repackages it as a download-and-run desktop app so users who aren't comfortable with the command line can get started right away.
+
 Just type a **topic** — it handles the entire pipeline automatically:
 
 > Write the script → generate AI images / video → synthesize voiceover → add background music → render the final video
 
 - 🖥️ **Native desktop** — Windows / macOS, download and run, no Python, command line, or browser needed
-- 📦 **Engine included** — the full backend is bundled in the installer and runs locally and offline, with no external server
+- 📦 **Engine included** — the full backend is bundled in the installer; there's no separate service to deploy or start
+- 🔒 **Local-first** — the backend runs on your own machine; your API keys and data go straight to the model services you configure, never through any relay server operated by this project
 - 🎬 **Zero editing skill** — fully automated from topic to finished video, no video-editing experience required
 - 🧩 **Swappable building blocks** — built on ComfyUI workflows; the script model, image model, voice, and templates are all replaceable
+
+## Changes from upstream
+
+On top of Pixelle-Video, this fork:
+
+- removes the original Streamlit web UI and the Docker deployment path;
+- adds a cross-platform desktop app built on Tauri 2.0, with the backend bundled in the installer for download-and-run use.
 
 ## Download
 
@@ -47,4 +57,4 @@ Grab the latest build from [**Releases**](https://github.com/Grivt/Reel-Video/re
 
 ## License
 
-Released under the [Apache License 2.0](LICENSE). This project is derived from an upstream open-source project; upstream and third-party attributions are listed in [NOTICE](NOTICE).
+Reel-Video is open-sourced under the [Apache License 2.0](LICENSE). It is a fork of [Pixelle-Video](https://github.com/AIDC-AI/Pixelle-Video) by AIDC-AI, repackaged as a desktop application. Full upstream and third-party attributions are in [NOTICE](NOTICE).
