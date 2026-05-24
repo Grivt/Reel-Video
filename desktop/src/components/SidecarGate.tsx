@@ -1,6 +1,7 @@
 import { ReactNode, useEffect } from "react";
 import { Result, Spin, Typography, Button, Space, Alert } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
+import { useTranslation } from "react-i18next";
 import { useSidecar } from "../store/sidecar";
 
 const { Paragraph, Text } = Typography;
@@ -14,6 +15,7 @@ interface Props {
  * Shows a loading view while the FastAPI process boots and an error view if it fails.
  */
 export function SidecarGate({ children }: Props) {
+  const { t } = useTranslation();
   const { status, error, base_url, startPolling, stopPolling } = useSidecar();
 
   useEffect(() => {
@@ -30,29 +32,31 @@ export function SidecarGate({ children }: Props) {
       <div style={fullscreenStyle}>
         <Result
           status="error"
-          title="后端服务启动失败"
-          subTitle="Python sidecar 未能在限定时间内就绪"
+          title={t("sidecar.failedTitle")}
+          subTitle={t("sidecar.failedSub")}
           extra={
             <Space direction="vertical" style={{ width: 480, textAlign: "left" }}>
               {error && (
                 <Alert
                   type="error"
                   showIcon
-                  message="错误信息"
+                  message={t("sidecar.errorInfo")}
                   description={<Text code copyable>{error}</Text>}
                 />
               )}
               <Paragraph type="secondary">
-                开发期可手动启动 sidecar 后重试：
+                {t("sidecar.devHint")}
                 <br />
                 <Text code copyable>
                   uv run python api/app.py --host 127.0.0.1 --port 8000
                 </Text>
                 <br />
-                然后设置环境变量 <Text code>REEL_SIDECAR_URL=http://127.0.0.1:8000</Text> 重启应用。
+                {t("sidecar.devEnvHintPre")}
+                <Text code>REEL_SIDECAR_URL=http://127.0.0.1:8000</Text>
+                {t("sidecar.devEnvHintPost")}
               </Paragraph>
               <Button type="primary" onClick={() => window.location.reload()}>
-                重试
+                {t("common.retry")}
               </Button>
             </Space>
           }
@@ -66,9 +70,9 @@ export function SidecarGate({ children }: Props) {
       <Space direction="vertical" size="large" align="center">
         <Spin indicator={<LoadingOutlined style={{ fontSize: 40 }} spin />} />
         <Typography.Title level={4} style={{ margin: 0 }}>
-          正在启动 Real Video 后端服务…
+          {t("sidecar.starting")}
         </Typography.Title>
-        <Text type="secondary">首次启动需要加载依赖，约 5–15 秒</Text>
+        <Text type="secondary">{t("sidecar.firstLaunchHint")}</Text>
       </Space>
     </div>
   );

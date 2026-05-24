@@ -24,16 +24,19 @@ import {
   FolderOpenOutlined,
 } from "@ant-design/icons";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { useTranslation } from "react-i18next";
 import type { ColumnsType } from "antd/es/table";
 import { api, unwrap } from "../api/client";
 import type { components } from "../api/generated/schema";
 import { useSidecar } from "../store/sidecar";
+import i18n from "../i18n";
 
 type Task = components["schemas"]["Task"];
 
 const REFRESH_INTERVAL_MS = 3000;
 
 export function History() {
+  const { t } = useTranslation();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,8 +75,8 @@ export function History() {
 
   const onCancel = async (taskId: string) => {
     modal.confirm({
-      title: "确认取消任务?",
-      content: `任务 ${taskId.slice(0, 12)} 将被中止`,
+      title: t("history.confirmCancelTitle"),
+      content: t("history.confirmCancelContent", { id: taskId.slice(0, 12) }),
       okType: "danger",
       onOk: async () => {
         try {
@@ -82,10 +85,10 @@ export function History() {
               params: { path: { task_id: taskId } },
             })
           );
-          message.success("已取消");
+          message.success(t("history.cancelled"));
           void load();
         } catch (e) {
-          message.error(`取消失败：${String(e)}`);
+          message.error(t("history.cancelFailed", { detail: String(e) }));
         }
       },
     });
@@ -98,32 +101,34 @@ export function History() {
       "";
     modal.confirm({
       icon: <ExclamationCircleFilled style={{ color: "#ff4d4f" }} />,
-      title: "确认永久删除？",
+      title: t("history.confirmDeleteTitle"),
       okType: "danger",
-      okText: "确认删除",
-      cancelText: "取消",
+      okText: t("history.confirmDeleteOk"),
+      cancelText: t("common.cancel"),
       width: 480,
       content: (
         <div>
           <Typography.Paragraph style={{ marginBottom: 8 }}>
-            该操作将同时删除：
+            {t("history.deleteWillRemove")}
           </Typography.Paragraph>
           <ul style={{ marginTop: 0, paddingLeft: 20 }}>
-            <li>历史记录条目</li>
-            <li>视频文件、分镜帧、TTS 音频等所有产物</li>
+            <li>{t("history.deleteItem1")}</li>
+            <li>{t("history.deleteItem2")}</li>
           </ul>
           <Alert
             type="warning"
             showIcon
-            message="此操作不可恢复"
+            message={t("history.irreversible")}
             style={{ marginTop: 12 }}
           />
           <Typography.Paragraph type="secondary" style={{ marginTop: 12, marginBottom: 0 }}>
-            任务：<Typography.Text code>{task.task_id.slice(0, 12)}…</Typography.Text>
+            {t("history.taskLabel")}
+            <Typography.Text code>{task.task_id.slice(0, 12)}…</Typography.Text>
             {title && (
               <>
                 <br />
-                标题：<Typography.Text>{title.slice(0, 60)}</Typography.Text>
+                {t("history.titleLabel")}
+                <Typography.Text>{title.slice(0, 60)}</Typography.Text>
               </>
             )}
           </Typography.Paragraph>
@@ -138,11 +143,11 @@ export function History() {
             { method: "DELETE" }
           );
           if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-          message.success("已删除");
+          message.success(t("history.deleted"));
           if (selected?.task_id === task.task_id) setSelected(null);
           void load();
         } catch (e) {
-          message.error(`删除失败：${String(e)}`);
+          message.error(t("history.deleteFailed", { detail: String(e) }));
         }
       },
     });
@@ -150,7 +155,7 @@ export function History() {
 
   const columns: ColumnsType<Task> = [
     {
-      title: "任务 ID",
+      title: t("history.colTaskId"),
       dataIndex: "task_id",
       key: "task_id",
       width: 130,
@@ -163,7 +168,7 @@ export function History() {
       ),
     },
     {
-      title: "状态",
+      title: t("history.colStatus"),
       dataIndex: "status",
       key: "status",
       width: 90,
@@ -178,7 +183,7 @@ export function History() {
       render: (s: Task["status"]) => <Tag color={statusColor(s)}>{s}</Tag>,
     },
     {
-      title: "进度",
+      title: t("history.colProgress"),
       key: "progress",
       width: 180,
       render: (_, t) => {
@@ -202,7 +207,7 @@ export function History() {
       },
     },
     {
-      title: "标题",
+      title: t("history.colTitle"),
       key: "title",
       ellipsis: true,
       render: (_, t) => {
@@ -212,7 +217,7 @@ export function History() {
       },
     },
     {
-      title: "创建时间",
+      title: t("history.colCreatedAt"),
       dataIndex: "created_at",
       key: "created_at",
       width: 160,
@@ -223,37 +228,37 @@ export function History() {
       render: (s?: string) => (s ? fmtTime(s) : "—"),
     },
     {
-      title: "操作",
+      title: t("history.colActions"),
       key: "actions",
       width: 220,
-      render: (_, t) => {
-        const isActive = t.status === "running" || t.status === "pending";
+      render: (_, row) => {
+        const isActive = row.status === "running" || row.status === "pending";
         return (
           <Space size="small">
             <Button
               size="small"
               icon={<EyeOutlined />}
-              onClick={() => setSelected(t)}
+              onClick={() => setSelected(row)}
             >
-              详情
+              {t("history.detail")}
             </Button>
             {isActive ? (
               <Button
                 size="small"
                 danger
                 icon={<StopOutlined />}
-                onClick={() => onCancel(t.task_id)}
+                onClick={() => onCancel(row.task_id)}
               >
-                取消
+                {t("common.cancel")}
               </Button>
             ) : (
               <Button
                 size="small"
                 danger
                 icon={<DeleteOutlined />}
-                onClick={() => onDelete(t)}
+                onClick={() => onDelete(row)}
               >
-                删除
+                {t("common.delete")}
               </Button>
             )}
           </Space>
@@ -266,13 +271,13 @@ export function History() {
     <Card
       title={
         <Space>
-          <span>历史记录</span>
-          {hasActive && <Tag color="processing">有任务进行中（自动刷新）</Tag>}
+          <span>{t("nav.history")}</span>
+          {hasActive && <Tag color="processing">{t("history.activeRefresh")}</Tag>}
         </Space>
       }
       extra={
         <Button icon={<ReloadOutlined />} onClick={() => void load()} loading={loading}>
-          手动刷新
+          {t("history.manualRefresh")}
         </Button>
       }
       size="small"
@@ -281,14 +286,14 @@ export function History() {
         <Alert
           type="error"
           showIcon
-          message="加载失败"
+          message={t("history.loadFailed")}
           description={error}
           style={{ marginBottom: 12 }}
         />
       )}
 
       {tasks.length === 0 && !loading ? (
-        <Empty description="还没有任务" />
+        <Empty description={t("history.noTasks")} />
       ) : (
         <Table
           rowKey="task_id"
@@ -314,6 +319,7 @@ function TaskDetailModal({
   baseUrl: string | null;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const { message } = AntdApp.useApp();
 
   // Streamable URL — needed by the <video> tag (Tauri WebView can't play
@@ -347,7 +353,7 @@ function TaskDetailModal({
     try {
       await revealItemInDir(localVideoPath);
     } catch (e) {
-      message.error(`无法在文件管理器中显示：${String(e)}`);
+      message.error(t("history.revealFailed", { detail: String(e) }));
     }
   };
 
@@ -369,13 +375,13 @@ function TaskDetailModal({
       {task && (
         <Space direction="vertical" style={{ width: "100%" }} size="middle">
           {task.error && (
-            <Alert type="error" showIcon message="错误" description={task.error} />
+            <Alert type="error" showIcon message={t("common.error")} description={task.error} />
           )}
 
           {videoUrl && (
             <div>
               <Typography.Title level={5} style={{ marginTop: 0 }}>
-                <VideoCameraOutlined /> 视频
+                <VideoCameraOutlined /> {t("history.video")}
               </Typography.Title>
               <video
                 src={videoUrl}
@@ -394,10 +400,10 @@ function TaskDetailModal({
               {localVideoPath && (
                 <div style={{ marginTop: 12 }}>
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                    文件位置：
+                    {t("history.fileLocation")}
                   </Typography.Text>
                   <Typography.Paragraph
-                    copyable={{ text: localVideoPath, tooltips: ["复制路径", "已复制"] }}
+                    copyable={{ text: localVideoPath, tooltips: [t("history.copyPath"), t("history.copied")] }}
                     style={{ fontSize: 12, marginTop: 4, marginBottom: 8, wordBreak: "break-all" }}
                   >
                     <Typography.Text code>{localVideoPath}</Typography.Text>
@@ -407,7 +413,7 @@ function TaskDetailModal({
                     icon={<FolderOpenOutlined />}
                     onClick={openInFileManager}
                   >
-                    在文件管理器中显示
+                    {t("history.revealInFileManager")}
                   </Button>
                 </div>
               )}
@@ -416,7 +422,7 @@ function TaskDetailModal({
 
           <details>
             <summary style={{ cursor: "pointer", marginBottom: 8 }}>
-              <Typography.Text type="secondary">请求参数（JSON）</Typography.Text>
+              <Typography.Text type="secondary">{t("history.requestParams")}</Typography.Text>
             </summary>
             <pre
               style={{
@@ -456,7 +462,8 @@ function statusColor(s: Task["status"]): string {
 function fmtTime(iso: string): string {
   try {
     const d = new Date(iso);
-    return d.toLocaleString("zh-CN", { hour12: false });
+    const locale = i18n.language === "en" ? "en-US" : "zh-CN";
+    return d.toLocaleString(locale, { hour12: false });
   } catch {
     return iso;
   }

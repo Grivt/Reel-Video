@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Input, Button, Space, Alert, message } from "antd";
 import { SoundOutlined } from "@ant-design/icons";
+import { useTranslation } from "react-i18next";
 import { api, unwrap, ApiError } from "../api/client";
 import { useSidecar } from "../store/sidecar";
 
@@ -19,7 +20,8 @@ interface Props {
  * workflows (uses whichever fields are bound by the caller).
  */
 export function TTSPreview({ mode, voice, speed, workflow, refAudio }: Props) {
-  const [text, setText] = useState("大家好，这是一段测试语音。");
+  const { t } = useTranslation();
+  const [text, setText] = useState(() => t("tts.defaultText"));
   const [audio, setAudio] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -27,7 +29,7 @@ export function TTSPreview({ mode, voice, speed, workflow, refAudio }: Props) {
 
   const onPreview = async () => {
     if (!text.trim()) {
-      message.warning("请输入预览文本");
+      message.warning(t("tts.pleaseInputText"));
       return;
     }
     setBusy(true);
@@ -62,7 +64,7 @@ export function TTSPreview({ mode, voice, speed, workflow, refAudio }: Props) {
         rows={2}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="输入预览文本"
+        placeholder={t("tts.inputPlaceholder")}
       />
       <Button
         icon={<SoundOutlined />}
@@ -70,13 +72,13 @@ export function TTSPreview({ mode, voice, speed, workflow, refAudio }: Props) {
         onClick={onPreview}
         block
       >
-        试听
+        {t("tts.preview")}
       </Button>
       {err && (
         <Alert
           type="error"
           showIcon
-          message="试听失败"
+          message={t("tts.previewFailed")}
           description={err}
           closable
           onClose={() => setErr(null)}

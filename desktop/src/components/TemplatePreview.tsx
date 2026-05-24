@@ -13,6 +13,7 @@ import {
   Spin,
 } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
+import { useTranslation } from "react-i18next";
 import { api, unwrap, ApiError } from "../api/client";
 import type { components } from "../api/generated/schema";
 
@@ -46,11 +47,12 @@ const RENDER_WIDTH = 320;
 export function TemplatePreview({
   templateKey,
   title = "Real Video",
-  text = "这里是测试文案 — 实际生成时会按分镜替换。",
+  text,
   image = "",
   value,
   onChange,
 }: Props) {
+  const { t } = useTranslation();
   const [paramConfig, setParamConfig] = useState<ParamMap>({});
   const [paramLoading, setParamLoading] = useState(false);
   const [renderLoading, setRenderLoading] = useState(false);
@@ -97,7 +99,8 @@ export function TemplatePreview({
           if (dirty) onChange(seeded);
         }
       } catch (e) {
-        if (!cancelled) setError(`加载模板参数失败：${String(e)}`);
+        if (!cancelled)
+          setError(t("template.loadParamsFailed", { detail: String(e) }));
       } finally {
         if (!cancelled) setParamLoading(false);
       }
@@ -123,7 +126,7 @@ export function TemplatePreview({
           body: {
             template: templateKey,
             title,
-            text,
+            text: text || t("template.demoText"),
             image,
             params: fullParams,
           },
@@ -148,7 +151,7 @@ export function TemplatePreview({
   const hasParams = paramKeys.length > 0;
 
   if (!templateKey) {
-    return <Empty description="选择模板后显示预览" />;
+    return <Empty description={t("template.selectToPreview")} />;
   }
 
   // Compute consistent scale + height so the iframe fills its container exactly.
@@ -187,14 +190,14 @@ export function TemplatePreview({
           onClick={renderHtml}
           block
         >
-          预览模板
+          {t("template.previewBtn")}
         </Button>
 
         {error && (
           <Alert
             type="error"
             showIcon
-            message="错误"
+            message={t("common.error")}
             description={error}
             closable
             onClose={() => setError(null)}

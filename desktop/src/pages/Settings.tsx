@@ -14,6 +14,7 @@ import {
   App as AntdApp,
 } from "antd";
 import { ExperimentOutlined, SaveOutlined } from "@ant-design/icons";
+import { useTranslation } from "react-i18next";
 import { api, unwrap, ApiError } from "../api/client";
 import type { components } from "../api/generated/schema";
 
@@ -24,11 +25,12 @@ type LLMPreset = components["schemas"]["LLMPreset"];
 const { Text, Paragraph } = Typography;
 
 export function Settings() {
+  const { t } = useTranslation();
   return (
     <Card>
       <Tabs
         items={[
-          { key: "llm", label: "LLM 配置", children: <LLMSettings /> },
+          { key: "llm", label: t("settings.llmTab"), children: <LLMSettings /> },
           {
             key: "comfyui",
             label: "ComfyUI / RunningHub",
@@ -68,6 +70,7 @@ function useSaveBanner() {
 }
 
 function LLMSettings() {
+  const { t } = useTranslation();
   const [form] = Form.useForm<LLMConfig>();
   const [presets, setPresets] = useState<LLMPreset[]>([]);
   const [selectedPreset, setSelectedPreset] = useState<string | undefined>();
@@ -93,7 +96,7 @@ function LLMSettings() {
           matched?.name ?? (cfg.base_url || cfg.model ? CUSTOM_PRESET : undefined)
         );
       } catch (e) {
-        message.error(`加载 LLM 配置失败：${String(e)}`);
+        message.error(t("settings.loadLlmFailed", { detail: String(e) }));
       }
     })();
   }, [form, message]);
@@ -118,8 +121,8 @@ function LLMSettings() {
       const values = await form.validateFields();
       setSaving(true);
       await unwrap(api().PUT("/api/config/llm", { body: values }));
-      message.success("LLM 配置已保存");
-      show("success", "✅ LLM 配置已保存并生效");
+      message.success(t("settings.llmSaved"));
+      show("success", t("settings.llmSavedBanner"));
     } catch (e) {
       const detail =
         e instanceof ApiError
@@ -127,8 +130,8 @@ function LLMSettings() {
           : e instanceof Error
           ? e.message
           : String(e);
-      message.error(`保存失败：${detail}`);
-      show("error", `保存失败：${detail.slice(0, 200)}`);
+      message.error(t("settings.saveFailed", { detail }));
+      show("error", t("settings.saveFailed", { detail: detail.slice(0, 200) }));
     } finally {
       setSaving(false);
     }
@@ -158,8 +161,8 @@ function LLMSettings() {
       }
     } catch (e) {
       const detail = String(e);
-      message.error(`测试失败：${detail}`);
-      show("error", `测试失败：${detail.slice(0, 200)}`);
+      message.error(t("settings.testFailed", { detail }));
+      show("error", t("settings.testFailed", { detail: detail.slice(0, 200) }));
     } finally {
       setTesting(false);
     }
@@ -177,13 +180,13 @@ function LLMSettings() {
 
   return (
     <Form form={form} layout="vertical">
-      <Form.Item label="预设" tooltip="选「自定义」可使用任意第三方 OpenAI 兼容 API">
+      <Form.Item label={t("settings.preset")} tooltip={t("settings.presetTooltip")}>
         <Select
-          placeholder="选择 LLM 提供商预设"
+          placeholder={t("settings.presetPlaceholder")}
           value={selectedPreset}
           options={[
             ...presets.map((p) => ({ value: p.name, label: p.name })),
-            { value: CUSTOM_PRESET, label: "自定义（第三方 / 自建 API）" },
+            { value: CUSTOM_PRESET, label: t("settings.custom") },
           ]}
           onChange={onSelectPreset}
           allowClear
@@ -192,11 +195,11 @@ function LLMSettings() {
       <Form.Item
         name="api_key"
         label="API Key"
-        rules={[{ required: true, message: "请输入 API Key" }]}
+        rules={[{ required: true, message: t("settings.apiKeyRequired") }]}
         extra={
           apiKeyUrl && (
             <a href={apiKeyUrl} target="_blank" rel="noreferrer">
-              🔑 获取 API Key
+              {t("settings.getApiKey")}
             </a>
           )
         }
@@ -206,14 +209,14 @@ function LLMSettings() {
       <Form.Item
         name="base_url"
         label="Base URL"
-        rules={[{ required: true, message: "请输入 Base URL" }]}
+        rules={[{ required: true, message: t("settings.baseUrlRequired") }]}
       >
         <Input placeholder="https://..." />
       </Form.Item>
       <Form.Item
         name="model"
         label="Model"
-        rules={[{ required: true, message: "请输入模型名" }]}
+        rules={[{ required: true, message: t("settings.modelRequired") }]}
       >
         <Input placeholder="gpt-4o / qwen-max / deepseek-chat ..." />
       </Form.Item>
@@ -225,10 +228,10 @@ function LLMSettings() {
           loading={saving}
           onClick={onSave}
         >
-          保存
+          {t("common.save")}
         </Button>
         <Button icon={<ExperimentOutlined />} loading={testing} onClick={onTest}>
-          测试连接
+          {t("settings.testConnection")}
         </Button>
       </Space>
 
@@ -247,6 +250,7 @@ function LLMSettings() {
 }
 
 function ComfyUISettings() {
+  const { t } = useTranslation();
   const [form] = Form.useForm<ComfyUIConfig>();
   const [saving, setSaving] = useState(false);
   const { message } = AntdApp.useApp();
@@ -258,7 +262,7 @@ function ComfyUISettings() {
         const cfg = await unwrap(api().GET("/api/config/comfyui"));
         form.setFieldsValue(cfg);
       } catch (e) {
-        message.error(`加载 ComfyUI 配置失败：${String(e)}`);
+        message.error(t("settings.loadComfyFailed", { detail: String(e) }));
       }
     })();
   }, [form, message]);
@@ -268,8 +272,8 @@ function ComfyUISettings() {
       const values = await form.validateFields();
       setSaving(true);
       await unwrap(api().PUT("/api/config/comfyui", { body: values }));
-      message.success("ComfyUI 配置已保存");
-      show("success", "✅ ComfyUI / RunningHub 配置已保存并生效");
+      message.success(t("settings.comfySaved"));
+      show("success", t("settings.comfySavedBanner"));
     } catch (e) {
       const detail =
         e instanceof ApiError
@@ -277,8 +281,8 @@ function ComfyUISettings() {
           : e instanceof Error
           ? e.message
           : String(e);
-      message.error(`保存失败：${detail}`);
-      show("error", `保存失败：${detail.slice(0, 200)}`);
+      message.error(t("settings.saveFailed", { detail }));
+      show("error", t("settings.saveFailed", { detail: detail.slice(0, 200) }));
     } finally {
       setSaving(false);
     }
@@ -289,51 +293,61 @@ function ComfyUISettings() {
       <Alert
         type="info"
         showIcon
-        message="生图 / 生视频可选两种方式"
+        message={t("settings.comfyInfoTitle")}
         description={
           <Paragraph style={{ marginBottom: 0 }}>
-            <Text strong>RunningHub 云端</Text>（推荐，零配置） /
-            <Text strong> 本地 ComfyUI</Text>（需要自己部署 ComfyUI 服务）。
-            两者至少配置一个。
+            <Text strong>{t("settings.comfyDescStrong1")}</Text>
+            {t("settings.comfyDescMid")}
+            <Text strong> {t("settings.comfyDescStrong2")}</Text>
+            {t("settings.comfyDescEnd")}
           </Paragraph>
         }
         style={{ marginBottom: 16 }}
       />
 
-      <Card type="inner" title={<><Tag color="processing">推荐</Tag> RunningHub 云端</>} size="small">
+      <Card
+        type="inner"
+        title={
+          <>
+            <Tag color="processing">{t("common.recommended")}</Tag>{" "}
+            {t("settings.runninghubCloud")}
+          </>
+        }
+        size="small"
+      >
         <Form.Item
           name="runninghub_api_key"
           label="RunningHub API Key"
           extra={
             <a href="https://www.runninghub.cn/?utm_source=reel" target="_blank" rel="noreferrer">
-              注册并获取 API Key →
+              {t("settings.registerGetKey")}
             </a>
           }
         >
-          <Input.Password placeholder="留空则不启用云端" autoComplete="off" />
+          <Input.Password placeholder={t("settings.runninghubPlaceholder")} autoComplete="off" />
         </Form.Item>
         <Form.Item
           name="runninghub_concurrent_limit"
-          label="并发上限"
-          tooltip="1-10。普通会员建议 1，会员可调高"
+          label={t("settings.concurrentLimit")}
+          tooltip={t("settings.concurrentTooltip")}
         >
           <InputNumber min={1} max={10} />
         </Form.Item>
       </Card>
 
-      <Card type="inner" title="本地 ComfyUI（可选）" size="small" style={{ marginTop: 12 }}>
+      <Card type="inner" title={t("settings.localComfyTitle")} size="small" style={{ marginTop: 12 }}>
         <Form.Item
           name="comfyui_url"
-          label="ComfyUI 地址"
-          tooltip="本地或局域网部署的 ComfyUI 服务地址"
+          label={t("settings.comfyUrl")}
+          tooltip={t("settings.comfyUrlTooltip")}
         >
           <Input placeholder="http://127.0.0.1:8188" />
         </Form.Item>
         <Form.Item
           name="comfyui_api_key"
-          label="ComfyUI API Key（如需）"
+          label={t("settings.comfyApiKeyLabel")}
         >
-          <Input.Password placeholder="留空则匿名访问" autoComplete="off" />
+          <Input.Password placeholder={t("settings.comfyApiKeyPlaceholder")} autoComplete="off" />
         </Form.Item>
       </Card>
 
@@ -344,7 +358,7 @@ function ComfyUISettings() {
         onClick={onSave}
         style={{ marginTop: 16 }}
       >
-        保存
+        {t("common.save")}
       </Button>
 
       {banner && (

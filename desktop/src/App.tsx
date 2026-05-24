@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import { Layout, Menu, theme, Typography, Space, Tag } from "antd";
+import { Layout, Menu, theme, Typography, Space, Tag, Segmented } from "antd";
 import {
   VideoCameraOutlined,
   HistoryOutlined,
   SettingOutlined,
+  TranslationOutlined,
 } from "@ant-design/icons";
 import { getVersion } from "@tauri-apps/api/app";
+import { useTranslation } from "react-i18next";
+import { setLanguage, type Lang } from "./i18n";
 import { SidecarGate } from "./components/SidecarGate";
 import { useSidecar } from "./store/sidecar";
 import { Home } from "./pages/Home";
@@ -13,15 +16,25 @@ import { Settings } from "./pages/Settings";
 import { History } from "./pages/History";
 
 const { Sider, Content, Header } = Layout;
-const { Title, Paragraph } = Typography;
+const { Title } = Typography;
 
 type NavKey = "home" | "history" | "settings";
 
-const NAV_ITEMS = [
-  { key: "home", icon: <VideoCameraOutlined />, label: "生成视频" },
-  { key: "history", icon: <HistoryOutlined />, label: "历史记录" },
-  { key: "settings", icon: <SettingOutlined />, label: "系统配置" },
-];
+function LanguageSwitcher() {
+  const { i18n } = useTranslation();
+  const lang = (i18n.language === "en" ? "en" : "zh") as Lang;
+  return (
+    <Segmented
+      size="small"
+      value={lang}
+      onChange={(v) => setLanguage(v as Lang)}
+      options={[
+        { value: "zh", label: "中文" },
+        { value: "en", label: "EN" },
+      ]}
+    />
+  );
+}
 
 function App() {
   return (
@@ -32,17 +45,24 @@ function App() {
 }
 
 function Shell() {
+  const { t } = useTranslation();
   const [nav, setNav] = useState<NavKey>("home");
   const [appVersion, setAppVersion] = useState<string>("");
-  const baseUrl = useSidecar((s) => s.base_url);
   const ffmpegPath = useSidecar((s) => s.ffmpeg_path);
   const {
-    token: { colorBgContainer, borderRadiusLG },
+    token: { colorBgContainer },
   } = theme.useToken();
 
   useEffect(() => {
     getVersion().then(setAppVersion).catch(() => setAppVersion("dev"));
   }, []);
+
+  const navItems = [
+    { key: "home", icon: <VideoCameraOutlined />, label: t("nav.home") },
+    { key: "history", icon: <HistoryOutlined />, label: t("nav.history") },
+    { key: "settings", icon: <SettingOutlined />, label: t("nav.settings") },
+  ];
+  const currentLabel = navItems.find((n) => n.key === nav)?.label ?? "Real Video";
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -56,14 +76,14 @@ function Shell() {
             Real Video
           </Title>
           <Tag color="processing" style={{ marginTop: 6 }}>
-            v{appVersion || "0.1.0"} · 桌面端
+            v{appVersion || "0.1.1"} · {t("app.desktopTag")}
           </Tag>
         </div>
         <Menu
           mode="inline"
           selectedKeys={[nav]}
           onClick={(e) => setNav(e.key as NavKey)}
-          items={NAV_ITEMS}
+          items={navItems}
           style={{ borderRight: 0 }}
         />
       </Sider>
@@ -73,18 +93,27 @@ function Shell() {
             background: colorBgContainer,
             padding: "0 24px",
             borderBottom: "1px solid rgba(0,0,0,0.06)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
           <Space>
             <Title level={5} style={{ margin: 0 }}>
-              {NAV_ITEMS.find((n) => n.key === nav)?.label ?? "Real Video"}
+              {currentLabel}
             </Title>
-            <Tag color="default">脚手架</Tag>
+            <Tag color="default">{t("app.scaffold")}</Tag>
             {ffmpegPath ? (
-              <Tag color="success" title={ffmpegPath}>ffmpeg ✓</Tag>
+              <Tag color="success" title={ffmpegPath}>{t("app.ffmpegOk")}</Tag>
             ) : (
-              <Tag color="warning" title="未检测到 ffmpeg">ffmpeg ✗</Tag>
+              <Tag color="warning" title={t("app.ffmpegMissingTitle")}>
+                {t("app.ffmpegMissing")}
+              </Tag>
             )}
+          </Space>
+          <Space size="small">
+            <TranslationOutlined style={{ color: "rgba(0,0,0,0.45)" }} />
+            <LanguageSwitcher />
           </Space>
         </Header>
         <Content style={{ margin: 24 }}>
@@ -92,25 +121,8 @@ function Shell() {
             <Home />
           ) : nav === "settings" ? (
             <Settings />
-          ) : nav === "history" ? (
-            <History />
           ) : (
-            <div
-              style={{
-                padding: 32,
-                minHeight: 480,
-                background: colorBgContainer,
-                borderRadius: borderRadiusLG,
-              }}
-            >
-              <Title level={3}>
-                {NAV_ITEMS.find((n) => n.key === nav)?.label}
-              </Title>
-              <Paragraph type="secondary">
-                此页面正在搭建中。后端服务地址：
-                <Tag color="processing">{baseUrl ?? "—"}</Tag>
-              </Paragraph>
-            </div>
+            <History />
           )}
         </Content>
       </Layout>

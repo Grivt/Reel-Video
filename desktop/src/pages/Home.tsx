@@ -26,6 +26,7 @@ import {
   VideoCameraOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
+import { useTranslation } from "react-i18next";
 import { api, unwrap, ApiError } from "../api/client";
 import { useResources, type TemplateType } from "../hooks/useResources";
 import { useTaskProgress } from "../hooks/useTaskProgress";
@@ -72,6 +73,7 @@ const PREFERRED = {
 };
 
 export function Home() {
+  const { t } = useTranslation();
   const [form] = Form.useForm<FormShape>();
   const [submitting, setSubmitting] = useState(false);
   const [taskId, setTaskId] = useState<string | null>(null);
@@ -200,13 +202,13 @@ export function Home() {
 
   const bgmOptions = useMemo(
     () => [
-      { value: "", label: "无 BGM" },
+      { value: "", label: t("home.noBgm") },
       ...(resources.bgmFiles ?? []).map((b) => ({
         value: b.path,
         label: `${b.name} · ${b.source}`,
       })),
     ],
-    [resources.bgmFiles]
+    [resources.bgmFiles, t]
   );
 
   const showMissingDepsModal = (
@@ -226,33 +228,31 @@ export function Home() {
         ? "https://evermeet.cx/ffmpeg/"
         : "https://ffmpeg.org/download.html";
     modal.error({
-      title: `缺少必要依赖：${missing.join(" / ")}`,
+      title: t("home.depsModalTitle", { deps: missing.join(" / ") }),
       width: 540,
       content: (
         <div>
-          <Paragraph style={{ marginBottom: 8 }}>
-            生成视频前需要安装 <Text code>ffmpeg</Text>（含 <Text code>ffprobe</Text>）才能合成最终视频与读取媒体元信息。
-          </Paragraph>
+          <Paragraph style={{ marginBottom: 8 }}>{t("home.depsBody1")}</Paragraph>
           <Paragraph type="secondary" style={{ marginBottom: 4 }}>
-            推荐命令（终端 / PowerShell 执行）：
+            {t("home.depsCmdLabel")}
           </Paragraph>
           <Paragraph copyable={{ text: installCmd }}>
             <Text code style={{ fontSize: 13 }}>{installCmd}</Text>
           </Paragraph>
           <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-            或手动下载预编译包：
+            {t("home.depsManualLabel")}
             <br />
             <a href={downloadUrl} target="_blank" rel="noreferrer">{downloadUrl}</a>
           </Paragraph>
           <Alert
             type="info"
             showIcon
-            message="安装完成后，重新打开本应用即可生效。"
+            message={t("home.depsInstalledInfo")}
             style={{ marginTop: 12 }}
           />
         </div>
       ),
-      okText: "我知道了",
+      okText: t("common.gotIt"),
     });
   };
 
@@ -291,11 +291,11 @@ export function Home() {
         api().POST("/api/video/generate/async", { body })
       );
       setTaskId(resp.task_id);
-      message.success(`已提交任务 ${resp.task_id.slice(0, 8)}…`);
+      message.success(t("home.submitted", { id: resp.task_id.slice(0, 8) }));
     } catch (e) {
       const detail =
         e instanceof ApiError ? JSON.stringify(e.body, null, 2) : String(e);
-      message.error(`提交失败：${detail.slice(0, 300)}`);
+      message.error(t("home.submitFailed", { detail: detail.slice(0, 300) }));
     } finally {
       setSubmitting(false);
     }
@@ -316,51 +316,51 @@ export function Home() {
       <Row gutter={16}>
         {/* === 左栏：内容输入 === */}
         <Col span={8}>
-          <Card title="内容输入" size="small">
+          <Card title={t("home.contentInput")} size="small">
             <Form.Item
               name="mode"
-              label="生成模式"
-              tooltip="AI 生成：由 LLM 创作文案；固定文案：直接用你提供的文本"
+              label={t("home.mode")}
+              tooltip={t("home.modeTooltip")}
             >
               <Radio.Group>
-                <Radio.Button value="generate">AI 生成</Radio.Button>
-                <Radio.Button value="fixed">固定文案</Radio.Button>
+                <Radio.Button value="generate">{t("home.modeGenerate")}</Radio.Button>
+                <Radio.Button value="fixed">{t("home.modeFixed")}</Radio.Button>
               </Radio.Group>
             </Form.Item>
 
             <Form.Item
               name="text"
-              label={mode === "fixed" ? "完整文案" : "视频主题"}
-              rules={[{ required: true, message: "请输入内容" }]}
+              label={mode === "fixed" ? t("home.fullText") : t("home.videoTopic")}
+              rules={[{ required: true, message: t("home.textRequired") }]}
             >
               <Input.TextArea
                 rows={mode === "fixed" ? 8 : 4}
                 placeholder={
                   mode === "fixed"
-                    ? "粘贴完整解说文案"
-                    : "例如：为什么要养成阅读习惯"
+                    ? t("home.fullTextPlaceholder")
+                    : t("home.topicPlaceholder")
                 }
               />
             </Form.Item>
 
-            <Form.Item name="title" label="视频标题（可选）">
-              <Input placeholder="留空则自动生成" />
+            <Form.Item name="title" label={t("home.videoTitle")}>
+              <Input placeholder={t("home.titlePlaceholder")} />
             </Form.Item>
 
             {mode === "generate" && (
-              <Form.Item name="n_scenes" label="分镜数量">
+              <Form.Item name="n_scenes" label={t("home.sceneCount")}>
                 <Slider min={3} max={10} marks={{ 3: "3", 5: "5", 8: "8", 10: "10" }} />
               </Form.Item>
             )}
 
-            <Form.Item name="bgm_path" label="背景音乐">
+            <Form.Item name="bgm_path" label={t("home.bgm")}>
               <Select
                 options={bgmOptions}
-                placeholder="选择 BGM"
+                placeholder={t("home.bgmPlaceholder")}
                 loading={resources.loading}
               />
             </Form.Item>
-            <Form.Item name="bgm_volume" label="BGM 音量">
+            <Form.Item name="bgm_volume" label={t("home.bgmVolume")}>
               <Slider min={0} max={1} step={0.05} />
             </Form.Item>
           </Card>
@@ -368,17 +368,17 @@ export function Home() {
 
         {/* === 中栏：TTS + 视觉 === */}
         <Col span={8}>
-          <Card title="语音 (TTS)" size="small">
-            <Form.Item name="tts_inference_mode" label="TTS 方式">
+          <Card title={t("home.ttsCard")} size="small">
+            <Form.Item name="tts_inference_mode" label={t("home.ttsMethod")}>
               <Radio.Group>
-                <Radio.Button value="local">本地 Edge TTS</Radio.Button>
-                <Radio.Button value="comfyui">ComfyUI 工作流</Radio.Button>
+                <Radio.Button value="local">{t("home.ttsLocal")}</Radio.Button>
+                <Radio.Button value="comfyui">{t("home.ttsComfy")}</Radio.Button>
               </Radio.Group>
             </Form.Item>
 
             {ttsMode === "local" ? (
               <>
-                <Form.Item name="tts_voice" label="音色">
+                <Form.Item name="tts_voice" label={t("home.voice")}>
                   <Select
                     options={voiceOptions}
                     showSearch
@@ -386,7 +386,7 @@ export function Home() {
                     loading={resources.loading}
                   />
                 </Form.Item>
-                <Form.Item name="tts_speed" label="语速倍率">
+                <Form.Item name="tts_speed" label={t("home.speed")}>
                   <Slider
                     min={0.5}
                     max={2}
@@ -397,7 +397,7 @@ export function Home() {
               </>
             ) : (
               <>
-                <Form.Item name="tts_workflow" label="TTS 工作流">
+                <Form.Item name="tts_workflow" label={t("home.ttsWorkflow")}>
                   <Select
                     options={ttsWorkflowOptions}
                     loading={resources.loading}
@@ -406,8 +406,8 @@ export function Home() {
                   />
                 </Form.Item>
                 <Form.Item
-                  label="参考音频（声音克隆，可选）"
-                  tooltip="支持声音克隆的 TTS 工作流（如 tts_index2）会用这段音色合成"
+                  label={t("home.refAudioLabel")}
+                  tooltip={t("home.refAudioTooltip")}
                 >
                   <Form.Item name="ref_audio" noStyle>
                     <Input type="hidden" />
@@ -428,7 +428,7 @@ export function Home() {
               items={[
                 {
                   key: "tts-preview",
-                  label: "🔊 试听",
+                  label: t("home.ttsPreview"),
                   children: (
                     <TTSPreview
                       mode={ttsMode ?? "local"}
@@ -443,13 +443,13 @@ export function Home() {
             />
           </Card>
 
-          <Card title="视觉" size="small" style={{ marginTop: 12 }}>
-            <Form.Item name="template_type" label="模板分类">
+          <Card title={t("home.visual")} size="small" style={{ marginTop: 12 }}>
+            <Form.Item name="template_type" label={t("home.templateType")}>
               <Segmented
                 options={[
-                  { value: "static", label: "静态模板" },
-                  { value: "image", label: "生图模板" },
-                  { value: "video", label: "视频模板" },
+                  { value: "static", label: t("home.tplStatic") },
+                  { value: "image", label: t("home.tplImage") },
+                  { value: "video", label: t("home.tplVideo") },
                 ]}
                 block
               />
@@ -457,13 +457,13 @@ export function Home() {
 
             <Form.Item
               name="frame_template"
-              label="视频模板"
-              rules={[{ required: true, message: "请选择模板" }]}
+              label={t("home.templateField")}
+              rules={[{ required: true, message: t("home.templateRequired") }]}
             >
               <Select
                 options={templateOptionsForType}
                 loading={resources.loading}
-                placeholder="选择该分类下的模板"
+                placeholder={t("home.templatePlaceholder")}
                 showSearch
                 optionFilterProp="label"
               />
@@ -472,7 +472,7 @@ export function Home() {
             {templateType !== "static" && (
               <Form.Item
                 name="media_workflow"
-                label={templateType === "video" ? "视频工作流" : "图像工作流"}
+                label={templateType === "video" ? t("home.videoWorkflow") : t("home.imageWorkflow")}
               >
                 <Select
                   options={filteredMediaWorkflowOptions}
@@ -481,8 +481,8 @@ export function Home() {
                   optionFilterProp="label"
                   placeholder={
                     filteredMediaWorkflowOptions.length === 0
-                      ? "未找到匹配工作流"
-                      : "选择工作流"
+                      ? t("home.noMatchWorkflow")
+                      : t("home.selectWorkflow")
                   }
                 />
               </Form.Item>
@@ -494,20 +494,20 @@ export function Home() {
               items={[
                 {
                   key: "advanced",
-                  label: "高级选项",
+                  label: t("home.advanced"),
                   children: (
                     <>
                       <Form.Item
                         name="prompt_prefix"
-                        label="图像风格前缀（英文）"
-                        tooltip="控制 AI 生成图像的整体风格"
+                        label={t("home.promptPrefix")}
+                        tooltip={t("home.promptPrefixTooltip")}
                       >
                         <Input.TextArea
                           rows={2}
-                          placeholder="e.g. Minimalist illustration, clean lines"
+                          placeholder={t("home.promptPrefixPlaceholder")}
                         />
                       </Form.Item>
-                      <Form.Item name="video_fps" label="视频帧率 (FPS)">
+                      <Form.Item name="video_fps" label={t("home.videoFps")}>
                         <Slider min={15} max={60} marks={{ 15: "15", 30: "30", 60: "60" }} />
                       </Form.Item>
                     </>
@@ -517,7 +517,7 @@ export function Home() {
             />
 
             <Divider style={{ margin: "8px 0" }} />
-            <Text strong>📋 模板预览</Text>
+            <Text strong>{t("home.templatePreviewLabel")}</Text>
             <Form.Item name="template_params" hidden>
               <Input />
             </Form.Item>
@@ -525,7 +525,7 @@ export function Home() {
               <TemplatePreview
                 templateKey={frameTemplate ?? null}
                 title={form.getFieldValue("title") || "Real Video"}
-                text={(form.getFieldValue("text") as string)?.slice(0, 60) || "示例分镜文案"}
+                text={(form.getFieldValue("text") as string)?.slice(0, 60) || t("home.sampleSceneText")}
                 value={templateParams as Record<string, unknown> | undefined}
                 onChange={(next) =>
                   form.setFieldsValue({ template_params: next } as never)
@@ -537,16 +537,16 @@ export function Home() {
 
         {/* === 右栏：生成 + 进度 + 视频预览 === */}
         <Col span={8}>
-          <Card title="生成视频" size="small">
+          <Card title={t("home.generateCard")} size="small">
             {resources.error && (
               <Alert
                 type="warning"
                 showIcon
-                message="资源加载失败"
+                message={t("home.resourceLoadFailed")}
                 description={resources.error}
                 action={
                   <Button size="small" icon={<ReloadOutlined />} onClick={resources.reload}>
-                    重试
+                    {t("common.retry")}
                   </Button>
                 }
                 style={{ marginBottom: 12 }}
@@ -558,10 +558,8 @@ export function Home() {
                 type="error"
                 showIcon
                 icon={<WarningOutlined />}
-                message={`缺少依赖：${deps.data.missing.join(" / ")}`}
-                description={
-                  <>生成前需要先安装 ffmpeg。点下方按钮查看你这台机器的安装指引。</>
-                }
+                message={t("home.missingDeps", { deps: deps.data.missing.join(" / ") })}
+                description={<>{t("home.missingDepsDesc")}</>}
                 action={
                   <Space direction="vertical" size="small">
                     <Button
@@ -571,7 +569,7 @@ export function Home() {
                         showMissingDepsModal(deps.data!.missing, deps.data!.platform)
                       }
                     >
-                      安装指引
+                      {t("home.installGuide")}
                     </Button>
                     <Button
                       size="small"
@@ -579,7 +577,7 @@ export function Home() {
                       onClick={() => void deps.refresh()}
                       loading={deps.loading}
                     >
-                      重新检查
+                      {t("home.recheck")}
                     </Button>
                   </Space>
                 }
@@ -596,14 +594,14 @@ export function Home() {
                 block
                 size="large"
               >
-                🎬 生成视频
+                {t("home.generateBtn")}
               </Button>
             </Form.Item>
 
             {progress.task && (
               <Space direction="vertical" style={{ width: "100%" }}>
                 <div>
-                  <Text type="secondary">任务 ID：</Text>
+                  <Text type="secondary">{t("home.taskId")}</Text>
                   <Tag>{progress.task.task_id.slice(0, 12)}</Tag>
                   <Tag color={statusColor(status)}>{status}</Tag>
                 </div>
@@ -626,7 +624,7 @@ export function Home() {
                   <Alert
                     type="error"
                     showIcon
-                    message="生成失败"
+                    message={t("home.genFailed")}
                     description={progress.task.error}
                   />
                 )}
@@ -637,7 +635,7 @@ export function Home() {
               <>
                 <Divider />
                 <Title level={5}>
-                  <VideoCameraOutlined /> 预览
+                  <VideoCameraOutlined /> {t("home.preview")}
                 </Title>
                 <video
                   src={absoluteVideoUrl(videoUrl, baseUrl)}
