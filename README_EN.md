@@ -33,8 +33,8 @@ Grab the latest build from [**Releases**](https://github.com/Grivt/Reel-Video/re
 
 | Platform | Installer |
 | --- | --- |
-| Windows | `Real Video_x.x.x_x64-setup.exe` |
-| macOS (Intel) | `Real Video_x.x.x_x64.dmg` |
+| Windows | `Reel Video_x.x.x_x64-setup.exe` |
+| macOS (Intel) | `Reel Video_x.x.x_x64.dmg` |
 
 > On first launch the app checks for dependencies such as ffmpeg and, if any are missing, shows platform-specific install guidance.
 

@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 #
-# PyInstaller spec for the Real Video desktop sidecar.
+# PyInstaller spec for the Reel Video desktop sidecar.
 #
 # Produces an onedir bundle at `dist/reel-api/`:
 #   reel-api.exe              ← launcher

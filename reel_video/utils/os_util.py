@@ -51,7 +51,7 @@ def ensure_reel_video_root_path() -> str:
     The legacy implementation also created `output/` under the root as a side
     effect, which assumed the root was writable. In the desktop bundle that
     assumption breaks — REEL_VIDEO_ROOT points at the read-only resource dir
-    inside the .app/.exe (e.g. `/Volumes/.../Real Video.app/Contents/Resources/`
+    inside the .app/.exe (e.g. `/Volumes/.../Reel Video.app/Contents/Resources/`
     on a DMG mount), so the side-effect mkdir crashed with errno 30 (Read-only
     file system) during pipeline init.
 

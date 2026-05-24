@@ -1,7 +1,7 @@
 [package]
 name = "reel-video-desktop"
 version = "0.1.1"
-description = "Real Video desktop shell (Tauri 2.0)"
+description = "Reel Video desktop shell (Tauri 2.0)"
 authors = ["Reel.AI"]
 edition = "2021"
 

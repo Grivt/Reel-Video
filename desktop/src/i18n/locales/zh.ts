@@ -28,7 +28,7 @@ export const zh = {
     buildingPage: "此页面正在搭建中。后端服务地址：",
   },
   sidecar: {
-    starting: "正在启动 Real Video 后端服务…",
+    starting: "正在启动 Reel Video 后端服务…",
     firstLaunchHint: "首次启动需要加载依赖，约 5–15 秒",
     failedTitle: "后端服务启动失败",
     failedSub: "Python sidecar 未能在限定时间内就绪",

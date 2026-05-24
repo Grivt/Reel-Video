@@ -1,5 +1,5 @@
 """
-PyInstaller entry point for the Real Video desktop sidecar.
+PyInstaller entry point for the Reel Video desktop sidecar.
 
 The Tauri shell spawns this binary with `--host 127.0.0.1 --port <auto>` and waits
 for the FastAPI server to bind. After PyInstaller freezes, the executable is
@@ -70,7 +70,7 @@ from api.app import app  # noqa: E402  (after sys.path tweak)
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Real Video desktop sidecar")
+    parser = argparse.ArgumentParser(description="Reel Video desktop sidecar")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=0)
     args = parser.parse_args()

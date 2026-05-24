@@ -30,7 +30,7 @@ export const en: Resources = {
     buildingPage: "This page is under construction. Backend service URL:",
   },
   sidecar: {
-    starting: "Starting the Real Video backend…",
+    starting: "Starting the Reel Video backend…",
     firstLaunchHint: "First launch loads dependencies, about 5–15 seconds",
     failedTitle: "Backend service failed to start",
     failedSub: "The Python sidecar did not become ready in time",

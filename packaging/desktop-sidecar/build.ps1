@@ -1,4 +1,4 @@
-# Build script for the Real Video desktop sidecar.
+# Build script for the Reel Video desktop sidecar.
 #
 # Usage (from repo root or any directory):
 #   pwsh packaging/desktop-sidecar/build.ps1

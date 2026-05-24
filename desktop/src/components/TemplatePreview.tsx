@@ -46,7 +46,7 @@ const RENDER_WIDTH = 320;
  */
 export function TemplatePreview({
   templateKey,
-  title = "Real Video",
+  title = "Reel Video",
   text,
   image = "",
   value,

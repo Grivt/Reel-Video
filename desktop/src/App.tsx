@@ -62,7 +62,7 @@ function Shell() {
     { key: "history", icon: <HistoryOutlined />, label: t("nav.history") },
     { key: "settings", icon: <SettingOutlined />, label: t("nav.settings") },
   ];
-  const currentLabel = navItems.find((n) => n.key === nav)?.label ?? "Real Video";
+  const currentLabel = navItems.find((n) => n.key === nav)?.label ?? "Reel Video";
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -73,7 +73,7 @@ function Shell() {
       >
         <div style={{ padding: "20px 24px" }}>
           <Title level={4} style={{ margin: 0 }}>
-            Real Video
+            Reel Video
           </Title>
           <Tag color="processing" style={{ marginTop: 6 }}>
             v{appVersion || "0.1.1"} · {t("app.desktopTag")}
