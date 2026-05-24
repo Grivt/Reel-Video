@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://github.com/Grivt/Reel-Video/releases"><img src="https://img.shields.io/badge/⬇️_下载-Releases-50C878" alt="下载"></a>
-  <img src="https://img.shields.io/badge/平台-Windows%20·%20macOS-4A90E2" alt="平台">
+  <a href="https://github.com/Grivt/Reel-Video/releases"><img src="https://img.shields.io/badge/平台-Windows%20·%20macOS-4A90E2" alt="平台"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/Grivt/Reel-Video?color=blue" alt="License"></a>
 </p>
 

@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://github.com/Grivt/Reel-Video/releases"><img src="https://img.shields.io/badge/⬇️_Download-Releases-50C878" alt="Download"></a>
-  <img src="https://img.shields.io/badge/Platform-Windows%20·%20macOS-4A90E2" alt="Platform">
+  <a href="https://github.com/Grivt/Reel-Video/releases"><img src="https://img.shields.io/badge/Platform-Windows%20·%20macOS-4A90E2" alt="Platform"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/Grivt/Reel-Video?color=blue" alt="License"></a>
 </p>
 
